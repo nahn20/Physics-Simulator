@@ -6,6 +6,7 @@ var cvs = {
 		this.ctx = this.canvas.getContext("2d");
 	}
 }
-function drawRect(pos, dim){
+function drawRect(pos, dim, color){
+	cvs.ctx.fillStyle = color;
 	cvs.ctx.fillRect(pos[0], pos[1], dim[0], dim[1]);
 }
