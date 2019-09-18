@@ -6,10 +6,12 @@ function basicRectangle(pos=[0,0],dim=[10,10],options){
 	this.accel = [0, 0];
 	this.force = [[0], [0]];
 	this.dim = dim;
-	this.mass = 100;
+	this.mass = 1000;
 	this.gravity = true;
 	this.infiniteMass = false;
 	this.color = "black";
+	this.previousTime = new Date();
+	this.previousdt = 20;
 	if(options.gravity || !options.gravity){
 		this.gravity = options.gravity;
 	}
@@ -22,7 +24,7 @@ function basicRectangle(pos=[0,0],dim=[10,10],options){
 	this.updateForces = function(){
 		this.color = "black";
 		if(this.gravity){
-			this.force[1].push(1*this.mass);
+			this.force[1].push((9.81/10)*this.mass);
 		}
 		for(var i = 0; i < sim.entities.length; i++){
 			if(sim.entities[i] != this){
@@ -43,10 +45,25 @@ function basicRectangle(pos=[0,0],dim=[10,10],options){
 			this.accel[0] = sumArray(this.force[0]) / this.mass;
 			this.accel[1] = sumArray(this.force[1]) / this.mass;
 		}
-		this.veloc[0] += this.accel[0];
-		this.veloc[1] += this.accel[1];
-		this.pos[0] += this.veloc[0];
-		this.pos[1] += this.veloc[1];
+		//STANDARD
+		// var currentTime = new Date();
+		// var dt = (currentTime-this.previousTime)/20;
+		// this.veloc[0] += this.accel[0];
+		// this.veloc[1] += this.accel[1];
+		// this.pos[0] += this.veloc[0];
+		// this.pos[1] += this.veloc[1];
+		// this.previousTime = new Date();
+
+
+		//VERLET
+		var currentTime = new Date();
+		var dt = (currentTime-this.previousTime)/20;
+		var temp = [this.pos[0], this.pos[1]];
+		this.pos[0] = 2*this.pos[0] - this.previousPos[0] + this.accel[0]*dt*dt;
+		this.pos[1] = 2*this.pos[1] - this.previousPos[1] + this.accel[1]*dt*dt;
+		this.previousPos = temp;
+		this.previousdt = dt;
+		this.previousTime = new Date();
 	}
 	this.draw = function(){
 		drawRect(this.pos, this.dim, this.color);
