@@ -10,8 +10,6 @@ function basicRectangle(pos=[0,0],dim=[10,10],options){
 	this.gravity = true;
 	this.infiniteMass = false;
 	this.color = "black";
-	this.previousTime = new Date();
-	this.previousdt = 20;
 	if(options.gravity || !options.gravity){
 		this.gravity = options.gravity;
 	}
@@ -24,7 +22,7 @@ function basicRectangle(pos=[0,0],dim=[10,10],options){
 	this.updateForces = function(){
 		this.color = "black";
 		if(this.gravity){
-			this.force[1].push((9.81/10)*this.mass);
+			this.force[1].push(spt*spt*9.81*this.mass);
 		}
 		for(var i = 0; i < sim.entities.length; i++){
 			if(sim.entities[i] != this){
@@ -38,7 +36,6 @@ function basicRectangle(pos=[0,0],dim=[10,10],options){
 				}
 			}
 		}
-
 	}
 	this.updatePos = function(){
 		if(!this.infiniteMass){
@@ -46,24 +43,10 @@ function basicRectangle(pos=[0,0],dim=[10,10],options){
 			this.accel[1] = sumArray(this.force[1]) / this.mass;
 		}
 		//STANDARD
-		// var currentTime = new Date();
-		// var dt = (currentTime-this.previousTime)/20;
-		// this.veloc[0] += this.accel[0];
-		// this.veloc[1] += this.accel[1];
-		// this.pos[0] += this.veloc[0];
-		// this.pos[1] += this.veloc[1];
-		// this.previousTime = new Date();
-
-
-		//VERLET
-		var currentTime = new Date();
-		var dt = (currentTime-this.previousTime)/20;
-		var temp = [this.pos[0], this.pos[1]];
-		this.pos[0] = 2*this.pos[0] - this.previousPos[0] + this.accel[0]*dt*dt;
-		this.pos[1] = 2*this.pos[1] - this.previousPos[1] + this.accel[1]*dt*dt;
-		this.previousPos = temp;
-		this.previousdt = dt;
-		this.previousTime = new Date();
+		this.veloc[0] += this.accel[0];
+		this.veloc[1] += this.accel[1];
+		this.pos[0] += this.veloc[0];
+		this.pos[1] += this.veloc[1];
 	}
 	this.draw = function(){
 		drawRect(this.pos, this.dim, this.color);
@@ -72,7 +55,7 @@ function basicRectangle(pos=[0,0],dim=[10,10],options){
 function spring(supportBlock,angle=90,equilibrium=100,otherDim=30,k=30, options){
 	this.type = "spring";
 	this.supportBlock = supportBlock;
-	this.extension = equilibrium; //Amount extended from base
+	this.extension = 0; //Amount extended from equilibrium. Towards base is negative
 	this.otherDim = otherDim; //Height for horizontal spring
 	this.angle = angle;
 	this.force = [[], []];
@@ -81,7 +64,9 @@ function spring(supportBlock,angle=90,equilibrium=100,otherDim=30,k=30, options)
 	this.stuck = null;
 	this.equilibrium = equilibrium; //Always positive
 	this.pos = [0, 0];
-	this.dim = [0, 0]
+	this.dim = [0, 0];
+	this.attachedTime = 0;
+	this.amplitude = 0;
 	if(options.sticky || !options.sticky){
 		this.sticky = options.sticky;
 	}
@@ -95,14 +80,18 @@ function spring(supportBlock,angle=90,equilibrium=100,otherDim=30,k=30, options)
 				if(sim.entities[i].type == "block" && sim.entities[i] != this.supportBlock){
 					if(rectCollisionTest(this, sim.entities[i])){
 						if(this.angle == 90){
-							sim.entities[i].force[1].push(-(this.equilibrium-this.extension)*this.k);
-							this.force[1].push(-(this.equilibrium-this.extension)*this.k);
-							if(this.equilibrium-this.extension >= 0 && !this.sticky){
-								this.extension = this.supportBlock.pos[1] - (sim.entities[i].pos[1] + sim.entities[i].dim[1]);
-								attached = true;
-							}
 							if(this.sticky){
 								this.stuck = sim.entities[i];
+								if(this.angle == 90){
+									this.amplitude = 2*Math.sqrt(this.stuck.mass/this.k)*Math.abs(this.stuck.veloc[1]);
+									var shift = this.stuck.mass*(spt*spt*9.81)/this.k;
+									this.equilibrium -= shift;
+									this.attachedTime = -Math.asin(shift/this.amplitude)/(Math.sqrt(this.k/this.stuck.mass)*spt);
+									this.stuck.veloc[1] = 0;
+								}
+							}
+							else{
+								this.attachedTime++;
 							}
 						}
 					}
@@ -110,28 +99,38 @@ function spring(supportBlock,angle=90,equilibrium=100,otherDim=30,k=30, options)
 			}
 		}
 		if(this.stuck){
-			this.stuck.force[1].push(-(this.equilibrium-this.extension)*this.k);
-			this.force[1].push(-(this.equilibrium-this.extension)*this.k);
+			this.attachedTime++;
 		}
-		if(!attached){
-			var offset = this.equilibrium-this.extension;
-			this.extension += 0.0005*offset*Math.abs(offset);
+		if(!attached && !this.stuck){
+			this.attachedTime = 0;
 		}
 	}
 	this.updatePos = function(){
 		if(this.angle == 90){
 			if(this.stuck){
-				this.extension = this.supportBlock.pos[1] - (this.stuck.pos[1] + this.stuck.dim[1]);
+				var angle = spt*this.attachedTime*Math.sqrt(this.k/this.stuck.mass);
+				this.extension = this.amplitude*Math.sin(angle);
 			}
 			var baseX = this.supportBlock.pos[0] + this.supportBlock.dim[0]/2 - this.otherDim/2;
-			var baseY = this.supportBlock.pos[1] - this.extension;
+			var baseY = this.supportBlock.pos[1] - this.equilibrium + this.extension;
 			this.pos = [baseX, baseY];
-			this.dim = [this.otherDim, this.extension];
+			this.dim = [this.otherDim, this.equilibrium - this.extension];
+			if(this.stuck){
+				this.stuck.pos[1] = this.pos[1] - this.stuck.dim[1];
+			}
+
 		}
 	}
 	this.draw = function(){
 		if(this.angle == 90){
-			drawRect(this.pos, this.dim, "blue");
+			var springCount = Math.round(Math.log(this.k)*5);
+			var springHeight = this.dim[1]/(1+0.8*(springCount-1));
+			for(var i = 0; i < springCount; i++){
+				cvs.ctx.strokeStyle = "black";
+				cvs.ctx.beginPath();
+				cvs.ctx.ellipse(this.pos[0]+this.dim[0]/2, this.pos[1]+springHeight/2+i*springHeight*0.8, this.dim[0]/2, springHeight/2, 0, 0, 2*Math.PI);
+				cvs.ctx.stroke();
+			}
 		}
 	}
 }
