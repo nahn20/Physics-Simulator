@@ -10,6 +10,7 @@ function basicRectangle(pos=[0,0],dim=[10,10],options){
 	this.gravity = true;
 	this.infiniteMass = false;
 	this.color = "black";
+	this.fill = true;
 	if(options.gravity || !options.gravity){
 		this.gravity = options.gravity;
 	}
@@ -22,7 +23,7 @@ function basicRectangle(pos=[0,0],dim=[10,10],options){
 	this.updateForces = function(){
 		this.color = "black";
 		if(this.gravity){
-			this.force[1].push(spt*spt*9.81*this.mass);
+			this.force[1].push(gravity*this.mass);
 		}
 		for(var i = 0; i < sim.entities.length; i++){
 			if(sim.entities[i] != this){
@@ -47,9 +48,6 @@ function basicRectangle(pos=[0,0],dim=[10,10],options){
 		this.veloc[1] += this.accel[1];
 		this.pos[0] += this.veloc[0];
 		this.pos[1] += this.veloc[1];
-	}
-	this.draw = function(){
-		drawRect(this.pos, this.dim, this.color);
 	}
 }
 function spring(supportBlock,angle=90,equilibrium=100,otherDim=30,k=30, options){
@@ -83,10 +81,10 @@ function spring(supportBlock,angle=90,equilibrium=100,otherDim=30,k=30, options)
 							if(this.sticky){
 								this.stuck = sim.entities[i];
 								if(this.angle == 90){
-									this.amplitude = 2*Math.sqrt(this.stuck.mass/this.k)*Math.abs(this.stuck.veloc[1]);
-									var shift = this.stuck.mass*(spt*spt*9.81)/this.k;
+									var shift = this.stuck.mass*gravity/this.k;
+									this.amplitude = Math.sqrt(this.stuck.mass*(2*gravity*shift+this.stuck.veloc[1]*this.stuck.veloc[1])/this.k);
 									this.equilibrium -= shift;
-									this.attachedTime = -Math.asin(shift/this.amplitude)/(Math.sqrt(this.k/this.stuck.mass)*spt);
+									this.attachedTime = -Math.asin(shift/this.amplitude)/(Math.sqrt(this.k/this.stuck.mass));
 									this.stuck.veloc[1] = 0;
 								}
 							}
@@ -108,7 +106,7 @@ function spring(supportBlock,angle=90,equilibrium=100,otherDim=30,k=30, options)
 	this.updatePos = function(){
 		if(this.angle == 90){
 			if(this.stuck){
-				var angle = spt*this.attachedTime*Math.sqrt(this.k/this.stuck.mass);
+				var angle = this.attachedTime*Math.sqrt(this.k/this.stuck.mass);
 				this.extension = this.amplitude*Math.sin(angle);
 			}
 			var baseX = this.supportBlock.pos[0] + this.supportBlock.dim[0]/2 - this.otherDim/2;
@@ -119,18 +117,6 @@ function spring(supportBlock,angle=90,equilibrium=100,otherDim=30,k=30, options)
 				this.stuck.pos[1] = this.pos[1] - this.stuck.dim[1];
 			}
 
-		}
-	}
-	this.draw = function(){
-		if(this.angle == 90){
-			var springCount = Math.round(Math.log(this.k)*5);
-			var springHeight = this.dim[1]/(1+0.8*(springCount-1));
-			for(var i = 0; i < springCount; i++){
-				cvs.ctx.strokeStyle = "black";
-				cvs.ctx.beginPath();
-				cvs.ctx.ellipse(this.pos[0]+this.dim[0]/2, this.pos[1]+springHeight/2+i*springHeight*0.8, this.dim[0]/2, springHeight/2, 0, 0, 2*Math.PI);
-				cvs.ctx.stroke();
-			}
 		}
 	}
 }

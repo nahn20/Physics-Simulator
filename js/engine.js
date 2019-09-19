@@ -1,7 +1,10 @@
-const spt = 200/1000;
+const gravity = 9.81/2500;
+var toDraw = [];
 function engine(){
 	this.time = 0;
 	this.entities = [];
+	this.camera = [];
+	this.toDraw = [];
 	this.loop = function(){
 		for(var i = 0; i < this.entities.length; i++){
 			this.entities[i].clearForces();
@@ -14,8 +17,8 @@ function engine(){
 		}
 	}
 	this.drawLoop = function(){
-		for(var i = 0; i < this.entities.length; i++){
-			this.entities[i].draw();
+		for(var i = 0; i < this.cameras.length; i++){
+			this.cameras[i].drawAll();
 		}
 	}
 	this.test = function(){
@@ -26,6 +29,7 @@ function startEngine(){
 	cvs.init();
 	sim = new engine();
 	sim.entities = [];
+	sim.cameras = [];
 	var k = [];
 	for(var i = 1; i < 15; i++){
 		k.push(i*50);
@@ -37,6 +41,9 @@ function startEngine(){
 		sim.entities.push(new basicRectangle([60+80*i,20], [60,60], {gravity:true,infiniteMass:false}));
 	}
 
+	sim.cameras[0] = new cameraConstructor(0, [0, 0], [0, 0], [600, 300], {sizeMultiplier: 0.5});
+	sim.cameras[1] = new cameraConstructor(1, [0, 0], [0, 300], [600, 300], {sizeMultiplier: 0.5});
+	sim.cameras[2] = new cameraConstructor(2, [0, 0], [600, 0], [600, 600], {sizeMultiplier: 0.5});
 	
 	
 
