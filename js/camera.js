@@ -4,7 +4,7 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
 	this.screenPos = screenPos;
 	this.sizeMultiplier = 1;
     this.dim = dim;
-    if(options.sizeMultiplier){
+    if(typeof(options.sizeMultiplier) != 'undefined'){
         this.sizeMultiplier = options.sizeMultiplier;
     }
     this.loop = function(){
@@ -79,6 +79,9 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
 	this.drawSpring = function(obj){
 		if(obj.angle == 90){
 			var springCount = Math.round(Math.log(obj.k)*5);
+			if(springCount < 5){
+				springCount = 5;
+			}
 			var springHeight = obj.dim[1]/(1+0.8*(springCount-1));
             cvs.ctx.save();
                 cvs.ctx.beginPath();
@@ -158,10 +161,10 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
     this.overlayRect = function(x, y, width, height, options){
         color = "black";
         fill = false;
-        if(options.color){
+        if(typeof(options.color) != 'undefined'){
             color = options.color;
         }
-        if(options.fill){
+        if(typeof(options.fill) != 'undefined'){
             fill = options.fill;
         }
         cvs.ctx.beginPath();
