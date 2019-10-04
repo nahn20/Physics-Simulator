@@ -3,26 +3,41 @@ function basicRectangle(pos=[0,0],dim=[10,10],options){
 	this.pos = pos;
 	this.previousPos = pos;
 	this.veloc = [0, 0];
+	this.futureVeloc = [0, 0];
 	this.accel = [0, 0];
 	this.force = [[0], [0]];
 	this.dim = dim;
-	this.mass = 1000;
+	this.mass = 10;
 	this.gravity = true;
 	this.infiniteMass = false;
 	this.interactable = true;
 	this.color = "black";
 	this.fill = true;
+	this.sticky = false;
+	this.energyLossCoefficient = 0;
 	if(typeof(options.gravity) != 'undefined'){
 		this.gravity = options.gravity;
 	}
 	if(typeof(options.infiniteMass) != 'undefined'){
 		this.infiniteMass = options.infiniteMass;
 	}
+	if(typeof(options.mass) != 'undefined'){
+		this.mass = options.mass;
+	}
+	if(typeof(options.density) != 'undefined'){
+		this.mass = options.density*this.dim[0]*this.dim[1];
+	}
 	if(typeof(options.initialVeloc) != 'undefined'){
 		this.veloc = options.initialVeloc;
 	}
 	if(typeof(options.interactable) != 'undefined'){
 		this.interactable = options.interactable;
+	}
+	if(typeof(options.sticky) != 'undefined'){
+		this.sticky = options.sticky;
+	}
+	if(typeof(options.energyLossCoefficient) != 'undefined'){
+		this.energyLossCoefficient = options.energyLossCoefficient;
 	}
 	this.clearForces = function(){
 		this.force = [[], []];
@@ -34,7 +49,7 @@ function basicRectangle(pos=[0,0],dim=[10,10],options){
 		}
 		for(var i = 0; i < sim.entities.length; i++){
 			if(sim.entities[i] != this && sim.entities[i].interactable == true){
-				if(isCurrentRectCollision(this, sim.entities[i]).both && sim.entities[i].type == "spring"){
+				if(isCurrentRectCollision(this, sim.entities[i]).both && sim.entities[i].type == "spring"){ //Spring block collision
 					var force = sumArray(this.force[0]);
 					sim.entities[i].force[0].push(force);
 					this.force[0].push(-force);
@@ -42,8 +57,50 @@ function basicRectangle(pos=[0,0],dim=[10,10],options){
 					sim.entities[i].force[1].push(force);
 					this.force[1].push(-force);
 				}
+				if(isCurrentRectCollision(this, sim.entities[i]).both && sim.entities[i].type == "block"){ //Block block collision
+					if(!this.sticky && !sim.entities[i].sticky){ //No stick
+						var k = this.energyLossCoefficient*sim.entities[i].energyLossCoefficient;
+						var a = {
+							m : this.mass,
+							v : this.veloc[0],
+						}; //Using variable names from my equation, sorry for bad naming convention
+						var b = {
+							m : sim.entities[i].mass,
+							v : sim.entities[i].veloc[0],
+						};
+						var vxFinal = this.bigCollisionMomentumEquation(a, b, k);
+						console.log(a.v + " " + b.v + " " + vxFinal)
+						a.v = this.veloc[1];
+						b.v = sim.entities[i].veloc[1];
+						var vyFinal = this.bigCollisionMomentumEquation(a, b, k);
+						this.force[0].push(this.mass*(vxFinal-this.veloc[0]));
+						this.force[1].push(this.mass*(vyFinal-this.veloc[1]));
+						// var k = 1;
+						// var a = {
+						// 	m : 10,
+						// 	v : 10,
+						// }; //Using variable names from my equation, sorry for bad naming convention
+						// var b = {
+						// 	m : 1,
+						// 	v : 10,
+						// };
+						// var vxFinal = this.bigCollisionMomentumEquation(a, b, k);
+						// a.v = 0;
+						// b.v = 0;
+						// var vyFinal = this.bigCollisionMomentumEquation(a, b, k);
+						// console.log("Vxfinal: " + vxFinal);
+						// console.log("Vyfinal: " + vyFinal);
+					}
+				}
 			}
 		}
+	}
+	this.bigCollisionMomentumEquation = function(a, b, k){
+		// var c = k*a.m+k*a.m*a.m/b.m; //Constant used multiple times in big equation
+		// var d = -2*k*a.m*a.m*a.v/b.m-2*k*b.v*a.m;
+		// var velocFinal = Math.sqrt(a.m*a.v*a.v+(1-k)*b.m*b.v*b.v-2*k*b.v*a.m*a.v-k*a.m*a.m*a.v*a.v/b.m+d*d/(4*c))/Math.sqrt(c)-d/(2*c);
+		var velocFinal = a.v*(a.m-b.m)/(a.m+b.m)+2*b.v*b.m/(a.m+b.m);
+		return velocFinal;
 	}
 	this.updatePos = function(){
 		if(!this.infiniteMass){
