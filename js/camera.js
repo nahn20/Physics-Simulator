@@ -43,13 +43,17 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
 		for(var i = 0; i < sim.selection.length; i++){
 			if(sim.selection[i] != null){
 				var copy = {
-					pos : sim.selection[i].pos,
-					dim : sim.selection[i].dim,
+					pos : [sim.selection[i].pos[0], sim.selection[i].pos[1]], //Copy, not reference
+					dim : [sim.selection[i].dim[0], sim.selection[i].dim[1]], //Copy, not reference
 					type : sim.selection[i].type,
+					lineWidth : 4,
 					color : "black",
 					fill : false,
-					lineWidth : 4,
 				}
+				copy.pos[0] += copy.lineWidth;
+				copy.pos[1] += copy.lineWidth;
+				copy.dim[0] -= 2*copy.lineWidth;
+				copy.dim[1] -= 2*copy.lineWidth;
 				if(i == 0){
 					copy.color = "blue";
 				}
