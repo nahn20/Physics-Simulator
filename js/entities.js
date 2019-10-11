@@ -14,7 +14,8 @@ function basicRectangle(pos=[0,0],dim=[10,10],options){
 	this.color = "black";
 	this.fill = true;
 	this.sticky = false;
-	this.energyLossCoefficient = 0;
+	this.velocLossCoefficient = 1;
+	this.updatePosOverride = false;
 	if(typeof(options.gravity) != 'undefined'){
 		this.gravity = options.gravity;
 	}
@@ -36,14 +37,16 @@ function basicRectangle(pos=[0,0],dim=[10,10],options){
 	if(typeof(options.sticky) != 'undefined'){
 		this.sticky = options.sticky;
 	}
-	if(typeof(options.energyLossCoefficient) != 'undefined'){
-		this.energyLossCoefficient = options.energyLossCoefficient;
+	if(typeof(options.velocLossCoefficient) != 'undefined'){
+		this.velocLossCoefficient = options.velocLossCoefficient;
+	}
+	if(typeof(options.color) != 'undefined'){
+		this.color = options.color;
 	}
 	this.clearForces = function(){
 		this.force = [[], []];
 	}
 	this.updateForces = function(){
-		this.color = "black";
 		if(this.gravity){
 			this.force[1].push(gravity*this.mass);
 		}
@@ -68,11 +71,10 @@ function basicRectangle(pos=[0,0],dim=[10,10],options){
 							m : sim.entities[i].mass,
 							v : sim.entities[i].veloc[0],
 						};
-						var vxFinal = this.bigCollisionMomentumEquation(a, b, k);
-						console.log(a.v + " " + b.v + " " + vxFinal)
+						var vxFinal = this.velocLossCoefficient*this.bigCollisionMomentumEquation(a, b, k);
 						a.v = this.veloc[1];
 						b.v = sim.entities[i].veloc[1];
-						var vyFinal = this.bigCollisionMomentumEquation(a, b, k);
+						var vyFinal = this.velocLossCoefficient*this.bigCollisionMomentumEquation(a, b, k);
 						this.force[0].push(this.mass*(vxFinal-this.veloc[0]));
 						this.force[1].push(this.mass*(vyFinal-this.veloc[1]));
 						// var k = 1;
@@ -96,10 +98,19 @@ function basicRectangle(pos=[0,0],dim=[10,10],options){
 		}
 	}
 	this.bigCollisionMomentumEquation = function(a, b, k){
+		//OLD VERSION\\
 		// var c = k*a.m+k*a.m*a.m/b.m; //Constant used multiple times in big equation
 		// var d = -2*k*a.m*a.m*a.v/b.m-2*k*b.v*a.m;
 		// var velocFinal = Math.sqrt(a.m*a.v*a.v+(1-k)*b.m*b.v*b.v-2*k*b.v*a.m*a.v-k*a.m*a.m*a.v*a.v/b.m+d*d/(4*c))/Math.sqrt(c)-d/(2*c);
+
+		//NEW VERSION\\
+		// var m = a.m/b.m;
+		// var c = m+m*m;
+		// var d = -2*m*m*a.v-2*m*b.v;
+		// var velocFinal = Math.sqrt((k-1)*(m*a.v*a.v+b.v*b.v)-2*m*a.v*b.v+d*d/(2*c))-d/(2*Math.sqrt(c))/Math.sqrt(c);
+		//ELASTIC VERSION\\
 		var velocFinal = a.v*(a.m-b.m)/(a.m+b.m)+2*b.v*b.m/(a.m+b.m);
+		
 		return velocFinal;
 	}
 	this.updatePos = function(){
@@ -110,8 +121,10 @@ function basicRectangle(pos=[0,0],dim=[10,10],options){
 		//STANDARD
 		this.veloc[0] += this.accel[0];
 		this.veloc[1] += this.accel[1];
-		this.pos[0] += this.veloc[0];
-		this.pos[1] += this.veloc[1];
+		if(!this.updatePosOverride){
+			this.pos[0] += this.veloc[0];
+			this.pos[1] += this.veloc[1];
+		}
 	}
 }
 function spring(supportBlock,angle=90,equilibrium=100,otherDim=30,k=30, options){
@@ -145,6 +158,7 @@ function spring(supportBlock,angle=90,equilibrium=100,otherDim=30,k=30, options)
 						if(this.angle == 90){
 							if(this.sticky){
 								this.stuck = sim.entities[i];
+								this.stuck.updatePosOverride = true;
 								var shift = this.stuck.mass*gravity/this.k;
 								this.amplitude = Math.sqrt(this.stuck.mass*(2*gravity*shift+this.stuck.veloc[1]*this.stuck.veloc[1])/this.k);
 								this.equilibrium -= shift;
@@ -165,6 +179,7 @@ function spring(supportBlock,angle=90,equilibrium=100,otherDim=30,k=30, options)
 				if(this.angle == 90){
 					var angle = this.attachedTime*Math.sqrt(this.k/this.stuck.mass);
 					this.stuck.veloc[1] = this.amplitude*Math.cos(angle)*(angle/this.attachedTime); //Derivative of position
+					this.stuck.updatePosOverride = false;
 				}
 				this.stuck = null;
 			}
@@ -190,6 +205,8 @@ function spring(supportBlock,angle=90,equilibrium=100,otherDim=30,k=30, options)
 			if(this.stuck){
 				var angle = this.attachedTime*Math.sqrt(this.k/this.stuck.mass);
 				this.extension = this.amplitude*Math.sin(angle);
+				this.stuck.pos[0] += this.stuck.veloc[0]; //Since position control is disabled in the block
+				this.stuck.veloc[1] = this.amplitude*Math.cos(angle)*(angle/this.attachedTime);
 			}
 			var baseX = this.supportBlock.pos[0] + this.supportBlock.dim[0]/2 - this.otherDim/2;
 			var baseY = this.supportBlock.pos[1] - this.equilibrium + this.extension;

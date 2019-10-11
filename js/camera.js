@@ -18,26 +18,47 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
         return false;
     }
     this.drawAll = function(){
-        for(var i = 0; i < sim.entities.length; i++){
-            var obj = sim.entities[i];
+		function caseDraw(obj, thisCam){ //Slightly convoluted way of doing this, but I really don't want to write this function twice
             switch(obj.type){
                 case "block":
-                    this.drawRect(obj);
+                    thisCam.drawRect(obj);
 					break;
 				case "spring":
-					this.drawSpring(obj);
+					thisCam.drawSpring(obj);
 					break;
                 // case "circle":
-                //     this.drawCircle(obj);
+                //     thisCam.drawCircle(obj);
                 //     break;
                 // case "text":
-                //     this.drawText(obj);
+                //     thisCam.drawText(obj);
                 //     break;
                 default:
-                    console.log("Error: toDraw[" + i + "] does not have a defined shape.");
+                    console.log("Error: toDraw[" + i + "] does not have a defined shape type.");
                     break;
             }
-        }
+		}
+        for(var i = 0; i < sim.entities.length; i++){
+			caseDraw(sim.entities[i], this);
+		}
+		for(var i = 0; i < sim.selection.length; i++){
+			if(sim.selection[i] != null){
+				var copy = {
+					pos : sim.selection[i].pos,
+					dim : sim.selection[i].dim,
+					type : sim.selection[i].type,
+					color : "black",
+					fill : false,
+					lineWidth : 4,
+				}
+				if(i == 0){
+					copy.color = "blue";
+				}
+				if(i == 1){
+					copy.color = "red";
+				}
+				caseDraw(copy, this);
+			}
+		}
         this.boarder();
         if(this.number != sim.cameras.length){
             for(var i = this.number+1; i < sim.cameras.length; i++){
@@ -51,13 +72,13 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
     this.drawRect = function(obj){
         if(this.onScreen(obj.pos[0], obj.pos[1], obj.dim[0], obj.dim[1])){
             var color = "black";
-            var fill = false;
-            if(obj.color){
-                color = obj.color;
-            }
-            if(obj.fill){
-                fill = obj.fill;
-            }
+			var fill = false;
+			if(typeof(obj.color) != 'undefined'){
+				color = obj.color
+			}
+			if(typeof(obj.fill) != 'undefined'){
+				fill = obj.fill
+			}
             cvs.ctx.save();
                 cvs.ctx.beginPath();
                 cvs.ctx.rect(this.screenPos[0], this.screenPos[1], this.dim[0], this.dim[1]);
@@ -69,6 +90,12 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
                     cvs.ctx.fillRect(this.screenPos[0]+this.sizeMultiplier*(obj.pos[0]-this.pos[0]), this.screenPos[1]+this.sizeMultiplier*(obj.pos[1]-this.pos[1]), this.sizeMultiplier*obj.dim[0], this.sizeMultiplier*obj.dim[1], color);
                 }
                 else{
+					if(typeof(obj.lineWidth) != 'undefined'){
+						cvs.ctx.lineWidth = obj.lineWidth;
+					}
+					else{
+						cvs.ctx.lineWidth = 1;
+					}
                     cvs.ctx.strokeStyle = color;
                     cvs.ctx.rect(this.screenPos[0]+this.sizeMultiplier*(obj.pos[0]-this.pos[0]), this.screenPos[1]+this.sizeMultiplier*(obj.pos[1]-this.pos[1]), this.sizeMultiplier*obj.dim[0], this.sizeMultiplier*obj.dim[1], color);
                     cvs.ctx.stroke();

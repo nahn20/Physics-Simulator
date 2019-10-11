@@ -56,6 +56,31 @@ var cvs = {
 					var mouseInEngineX = mouseOnCamX/sim.cameras[i].sizeMultiplier + sim.cameras[i].pos[0];
 					var mouseInEngineY = mouseOnCamY/sim.cameras[i].sizeMultiplier + sim.cameras[i].pos[1];
 					console.log("X: " + mouseInEngineX + "\nY: " + mouseInEngineY);
+					var mouseEntity = {
+						pos : [mouseInEngineX, mouseInEngineY],
+						dim : [0,0],
+					}
+					for(var k = 0; k < sim.entities.length; k++){
+						if(isCurrentRectCollision(mouseEntity,sim.entities[k]).both == true){
+							console.log(sim.entities[k]);
+							if(sim.keyMap[49]){
+								if(sim.selection[0] == sim.entities[k]){
+									sim.selection[0] = null;
+								}
+								else{
+									sim.selection[0] = sim.entities[k];
+								}
+							}
+							if(sim.keyMap[50]){
+								if(sim.selection[1] == sim.entities[k]){
+									sim.selection[1] = null;
+								}
+								else{
+									sim.selection[1] = sim.entities[k];
+								}
+							}
+						}
+					}
 				}
 			}
 		});
