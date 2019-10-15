@@ -1,10 +1,8 @@
 const gravity = 9.81/250;
-var toDraw = [];
 function engine(){
 	this.time = 0;
 	this.entities = [];
 	this.camera = [];
-	this.toDraw = [];
 	this.keyMap = [];
 	this.paused = false;
 	for(var i = 0; i < 223; i++){
@@ -28,9 +26,84 @@ function engine(){
 		}
 	}
 }
+function userInterface(){
+	this.toDraw = [];
+	this.selectionType = "block";
+	this.mousePos = [0, 0];
+	this.mouseDown = false;
+	this.selectionCoordsA = [0, 0];
+	this.selectionCoordsB = [0, 0];
+	this.drawUI = function(){
+		this.drawMouse();
+	}
+	this.drawMouse = function(){
+		if(this.selectionType == "block"){
+			if(this.mouseDown){
+				cvs.ctx.beginPath();
+				cvs.ctx.strokeStyle = "black";
+				cvs.ctx.lineWidth = 1;
+				cvs.ctx.rect(this.selectionCoordsA[0], this.selectionCoordsA[1], this.mousePos[0]-this.selectionCoordsA[0], this.mousePos[1]-this.selectionCoordsA[1]);
+				cvs.ctx.stroke();
+			}
+			else{
+				cvs.ctx.beginPath();
+				cvs.ctx.strokeStyle = "black";
+				cvs.ctx.lineWidth = 1;
+				cvs.ctx.rect(this.mousePos[0]-15, this.mousePos[1]+15, 10, 10);
+				cvs.ctx.stroke();
+			}
+		}
+	}
+	this.mouseUpTrigger = function(){
+		var selectionInEngineA;
+		var selectionInEngineB;
+		for(var i = 0; i < sim.cameras.length; i++){
+			if(this.selectionCoordsA[0] > sim.cameras[i].screenPos[0] && this.selectionCoordsA[0] < sim.cameras[i].screenPos[0]+sim.cameras[i].dim[0] && this.selectionCoordsA[1] > sim.cameras[i].screenPos[1] && this.selectionCoordsA[1] < sim.cameras[i].screenPos[1]+sim.cameras[i].dim[1]){
+				var x = (this.selectionCoordsA[0]-sim.cameras[i].screenPos[0])/sim.cameras[i].sizeMultiplier + sim.cameras[i].pos[0];
+				var y = (this.selectionCoordsA[1]-sim.cameras[i].screenPos[1])/sim.cameras[i].sizeMultiplier + sim.cameras[i].pos[1];
+				selectionInEngineA = [x, y];
+				x = (this.selectionCoordsB[0]-sim.cameras[i].screenPos[0])/sim.cameras[i].sizeMultiplier + sim.cameras[i].pos[0];
+				y = (this.selectionCoordsB[1]-sim.cameras[i].screenPos[1])/sim.cameras[i].sizeMultiplier + sim.cameras[i].pos[1];
+				selectionInEngineB = [x, y];
+			}
+		}
+		if(this.selectionType == "block"){
+			var dim = [selectionInEngineB[0]-selectionInEngineA[0], selectionInEngineB[1]-selectionInEngineA[1]];
+			if(dim[0] < 0){
+				var temp = selectionInEngineA[0];
+				selectionInEngineA[0] = selectionInEngineB[0];
+				selectionInEngineB[0] = temp;
+				dim = [selectionInEngineB[0]-selectionInEngineA[0], selectionInEngineB[1]-selectionInEngineA[1]];
+			}
+			if(dim[1] < 0){
+				var temp = selectionInEngineA[1];
+				selectionInEngineA[1] = selectionInEngineB[1];
+				selectionInEngineB[1] = temp;
+				dim = [selectionInEngineB[0]-selectionInEngineA[0], selectionInEngineB[1]-selectionInEngineA[1]];
+			}
+			var rect = new basicRectangle(selectionInEngineA, dim, {gravity:true, density:0.1});
+			var collidingWithAnything = false;
+			for(var i = 0; i < sim.entities.length; i++){
+				if(sim.entities[i].type == "block"){
+					if(isCurrentRectCollision(sim.entities[i], rect).both){
+						collidingWithAnything = true;
+						break;
+					}
+				}
+			}
+			if(!collidingWithAnything){
+				sim.entities.push(rect);
+			}
+			else{
+				console.log("Error: Block summoned inside of existing entity.")
+			}
+		}
+	}
+}
 function startEngine(){
 	cvs.init();
 	sim = new engine();
+	ui = new userInterface();
 	sim.entities = [];
 	sim.cameras = [];
 	var k = [];
@@ -56,10 +129,10 @@ function startEngine(){
 	
 	
 	//RECTANGLE COLLISION TEST 1\\
-	sim.entities.push(new basicRectangle([450, 450], [30, 30], {gravity:false, initialVeloc:[10, 0], density:0.1}));
+	sim.entities.push(new basicRectangle([450, 450], [30, 30], {gravity:true, initialVeloc:[10, 0], density:0.1}));
 	//sim.entities.push(new basicRectangle([850, 0], [60, 60], {gravity:false, initialVeloc:[0, 6]}));
-	sim.entities.push(new basicRectangle([800, 350], [60, 60], {gravity:false, initialVeloc:[1, 3], density:0.1}));
-	sim.entities.push(new basicRectangle([1000, 350], [90, 90], {gravity:false, initialVeloc:[1, 3], density:0.1}));
+	sim.entities.push(new basicRectangle([800, 350], [60, 60], {gravity:true, initialVeloc:[1, 3], density:0.1}));
+	sim.entities.push(new basicRectangle([1000, 350], [90, 90], {gravity:true, initialVeloc:[1, 3], density:0.1}));
 
 	/*
 	//RECTANGLE COLLISION TEST 2\\
@@ -90,8 +163,10 @@ function startEngine(){
 	*/
 
 
-	sim.cameras[0] = new cameraConstructor(0, [0, 0], [0, 0], [1200, 600], {sizeMultiplier: 0.45});
+	//sim.cameras[0] = new cameraConstructor(0, [0, 0], [0, 0], [1200, 600], {sizeMultiplier: 0.45});
 
+	sim.cameras[0] = new cameraConstructor(0, [0, 0], [0, 0], [600, 600], {sizeMultiplier: 0.45});
+	sim.cameras[1] = new cameraConstructor(1, [0, 0], [600, 0], [600, 600], {sizeMultiplier: 0.1});
 
 
 
@@ -102,6 +177,7 @@ function startEngine(){
 	function drawLoop(){
 		cvs.ctx.clearRect(0, 0, cvs.width, cvs.height);
 		sim.drawLoop();
+		ui.drawUI();
 		requestAnimationFrame(drawLoop);
 	}
 	document.addEventListener("keydown", function(event){
@@ -129,6 +205,12 @@ function startEngine(){
 				}, 20);
 				sim.paused = false;
 			}
+		}
+		if(event.keyCode == 66){ //b
+			ui.selectionType = "block";
+		}
+		if(event.keyCode == 27){ //esc
+			ui.selectionType = "none";
 		}
 	});
 	document.addEventListener("keyup", function(event){

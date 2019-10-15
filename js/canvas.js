@@ -13,7 +13,7 @@ var cvs = {
 			var mouseY = event.y - canvasCoords.top;
 			for(var i = 0; i < sim.cameras.length; i++){
 				if(mouseX > sim.cameras[i].screenPos[0] && mouseX < sim.cameras[i].screenPos[0]+sim.cameras[i].dim[0] && mouseY > sim.cameras[i].screenPos[1] && mouseY < sim.cameras[i].screenPos[1]+sim.cameras[i].dim[1]){
-					if((sim.cameras[i].sizeMultiplier > 0.2 && event.deltaY > 0) || (sim.cameras[i].sizeMultiplier < 2 && event.deltaY < 0)){
+					if((sim.cameras[i].sizeMultiplier > 0.1 && event.deltaY > 0) || (sim.cameras[i].sizeMultiplier < 2 && event.deltaY < 0)){
 						var shift = event.deltaY/100;
 						var centerInEngineX = (sim.cameras[i].dim[0]/2)/sim.cameras[i].sizeMultiplier + sim.cameras[i].pos[0];
 						var centerInEngineY = (sim.cameras[i].dim[1]/2)/sim.cameras[i].sizeMultiplier + sim.cameras[i].pos[1];
@@ -83,6 +83,34 @@ var cvs = {
 					}
 				}
 			}
+		});
+		this.canvas.addEventListener("mousemove", function(event){
+			var canvasCoords = cvs.canvas.getBoundingClientRect();
+			var mouseX = event.x - canvasCoords.left;
+			var mouseY = event.y - canvasCoords.top;
+			ui.mousePos = [mouseX, mouseY];
+		});
+		this.canvas.addEventListener("mousedown", function(event){
+			var canvasCoords = cvs.canvas.getBoundingClientRect();
+			var mouseX = event.x - canvasCoords.left;
+			var mouseY = event.y - canvasCoords.top;
+			if(!ui.mouseDown){
+				ui.selectionCoordsA = [mouseX, mouseY];
+				ui.mouseDown = true;
+			}
+			else{ //If you release click off screen, program treats the next click in the canvas as a release
+				ui.selectionCoordsB = [mouseX, mouseY];
+				ui.mouseDown = false;
+				ui.mouseUpTrigger();
+			}
+		});
+		this.canvas.addEventListener("mouseup", function(event){
+			var canvasCoords = cvs.canvas.getBoundingClientRect();
+			var mouseX = event.x - canvasCoords.left;
+			var mouseY = event.y - canvasCoords.top;
+			ui.selectionCoordsB = [mouseX, mouseY];
+			ui.mouseDown = false;
+			ui.mouseUpTrigger();
 		});
 	}
 }

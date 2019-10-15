@@ -33,14 +33,15 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
                 //     thisCam.drawText(obj);
                 //     break;
                 default:
-                    console.log("Error: toDraw[" + i + "] does not have a defined shape type.");
+					console.log("Object does not have a defined shape type.");
+					console.log(obj);
                     break;
             }
 		}
-        for(var i = 0; i < sim.entities.length; i++){
+        for(var i = 0; i < sim.entities.length; i++){ //Drawing all entities
 			caseDraw(sim.entities[i], this);
 		}
-		for(var i = 0; i < sim.selection.length; i++){
+		for(var i = 0; i < sim.selection.length; i++){ //Drawing borders for selection tool
 			if(sim.selection[i] != null){
 				var copy = {
 					pos : [sim.selection[i].pos[0], sim.selection[i].pos[1]], //Copy, not reference
