@@ -16,6 +16,8 @@ function basicRectangle(pos=[0,0],dim=[10,10],options){
 	this.sticky = false;
 	this.velocLossCoefficient = 1;
 	this.updatePosOverride = false;
+	this.collisionCounter = 0;
+	this.displayNumCollision = false;
 	if(typeof(options.gravity) != 'undefined'){
 		this.gravity = options.gravity;
 	}
@@ -43,6 +45,9 @@ function basicRectangle(pos=[0,0],dim=[10,10],options){
 	if(typeof(options.color) != 'undefined'){
 		this.color = options.color;
 	}
+	if(typeof(options.displayNumCollision) != 'undefined'){
+		this.displayNumCollision = options.displayNumCollision;
+	}
 	this.clearForces = function(){
 		this.force = [[], []];
 	}
@@ -62,19 +67,27 @@ function basicRectangle(pos=[0,0],dim=[10,10],options){
 				}
 				if(isCurrentRectCollision(this, sim.entities[i]).both && sim.entities[i].type == "block"){ //Block block collision
 					if(!this.sticky && !sim.entities[i].sticky){ //No stick
-						var k = this.energyLossCoefficient*sim.entities[i].energyLossCoefficient;
-						var a = {
-							m : this.mass,
-							v : this.veloc[0],
-						}; //Using variable names from my equation, sorry for bad naming convention
-						var b = {
-							m : sim.entities[i].mass,
-							v : sim.entities[i].veloc[0],
-						};
-						var vxFinal = this.velocLossCoefficient*this.bigCollisionMomentumEquation(a, b, k);
-						a.v = this.veloc[1];
-						b.v = sim.entities[i].veloc[1];
-						var vyFinal = this.velocLossCoefficient*this.bigCollisionMomentumEquation(a, b, k);
+						var vxFinal;
+						var vyFinal;
+						this.collisionCounter++;
+						if(!this.infiniteMass && !sim.entities[i].infiniteMass){
+							var a = {
+								m : this.mass,
+								v : this.veloc[0],
+							}; //Using variable names from my equation, sorry for bad naming convention
+							var b = {
+								m : sim.entities[i].mass,
+								v : sim.entities[i].veloc[0],
+							};
+							vxFinal = this.velocLossCoefficient*this.bigCollisionMomentumEquation(a, b);
+							a.v = this.veloc[1];
+							b.v = sim.entities[i].veloc[1];
+							vyFinal = this.velocLossCoefficient*this.bigCollisionMomentumEquation(a, b);
+						}
+						else if(sim.entities[i].infiniteMass){
+							vxFinal = -this.veloc[0];
+							vyFinal = -this.veloc[1];
+						}
 						this.force[0].push(this.mass*(vxFinal-this.veloc[0]));
 						this.force[1].push(this.mass*(vyFinal-this.veloc[1]));
 						// var k = 1;
@@ -97,7 +110,7 @@ function basicRectangle(pos=[0,0],dim=[10,10],options){
 			}
 		}
 	}
-	this.bigCollisionMomentumEquation = function(a, b, k){
+	this.bigCollisionMomentumEquation = function(a, b){
 		//OLD VERSION\\
 		// var c = k*a.m+k*a.m*a.m/b.m; //Constant used multiple times in big equation
 		// var d = -2*k*a.m*a.m*a.v/b.m-2*k*b.v*a.m;

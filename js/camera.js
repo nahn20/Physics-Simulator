@@ -21,7 +21,16 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
 		function caseDraw(obj, thisCam){ //Slightly convoluted way of doing this, but I really don't want to write this function twice
             switch(obj.type){
                 case "block":
-                    thisCam.drawRect(obj);
+					thisCam.drawRect(obj);
+					if(obj.displayNumCollision){
+						var display = {
+							text : obj.collisionCounter,
+							textSize: 100,
+							x : obj.pos[0]+obj.dim[0]/2,
+							y : obj.pos[1]-10,
+						}
+						thisCam.drawText(display);
+					}
 					break;
 				case "spring":
 					thisCam.drawSpring(obj);
@@ -166,19 +175,19 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
         var text = "Filler Text";
         var textSize = 16;
         var color = "black";
-        var textAlign = "center";
-        if(obj.text){
-            text = obj.text;
-        }
-        if(obj.textSize){
-            textSize = obj.textSize;
-        }
-        if(obj.color){
-            color = obj.color;
-        }
-        if(obj.textAlign){
-            textAlign = obj.textAlign;
-        }
+		var textAlign = "center";
+		if(typeof(obj.text) != 'undefined'){
+			text = obj.text
+		}
+		if(typeof(obj.textSize) != 'undefined'){
+			textSize = obj.textSize
+		}
+		if(typeof(obj.color) != 'undefined'){
+			color = obj.color
+		}
+		if(typeof(obj.textAlign) != 'undefined'){
+			textAlign = obj.textAlign
+		}
         cvs.ctx.save();
             cvs.ctx.beginPath();
             cvs.ctx.rect(this.screenPos[0], this.screenPos[1], this.dim[0], this.dim[1]);
@@ -186,7 +195,7 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
 
             cvs.ctx.fillStyle = color;
             cvs.ctx.textAlign = textAlign;
-            cvs.ctx.font = this.sizeMultiplier*textSize + "px Arial";
+			cvs.ctx.font = this.sizeMultiplier*textSize + "px Arial";
             cvs.ctx.fillText(text, this.screenPos[0]+this.sizeMultiplier*(obj.x - this.pos[0]), this.screenPos[1]+this.sizeMultiplier*(obj.y - this.pos[1])); 
         cvs.ctx.restore();
     }

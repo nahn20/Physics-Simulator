@@ -28,7 +28,7 @@ function engine(){
 }
 function userInterface(){
 	this.toDraw = [];
-	this.selectionType = "block";
+	this.selectionType = "none";
 	this.mousePos = [0, 0];
 	this.mouseDown = false;
 	this.selectionCoordsA = [0, 0];
@@ -127,12 +127,13 @@ function startEngine(){
 	sim.cameras[2] = new cameraConstructor(2, [0, -200], [600, 0], [600, 600], {sizeMultiplier: 0.5});
 	*/
 	
-	
+	/*
 	//RECTANGLE COLLISION TEST 1\\
 	sim.entities.push(new basicRectangle([450, 450], [30, 30], {gravity:true, initialVeloc:[10, 0], density:0.1}));
 	//sim.entities.push(new basicRectangle([850, 0], [60, 60], {gravity:false, initialVeloc:[0, 6]}));
 	sim.entities.push(new basicRectangle([800, 350], [60, 60], {gravity:true, initialVeloc:[1, 3], density:0.1}));
 	sim.entities.push(new basicRectangle([1000, 350], [90, 90], {gravity:true, initialVeloc:[1, 3], density:0.1}));
+	*/
 
 	/*
 	//RECTANGLE COLLISION TEST 2\\
@@ -161,18 +162,41 @@ function startEngine(){
 	sim.entities.push(new basicRectangle([1200, 0], [60, 60], {mass:100, initialVeloc:[0, 10]}));
 	sim.entities.push(new basicRectangle([-600, 700], [60, 60], {mass:100, initialVeloc:[10, -5]}));
 	*/
-
-
-	//sim.cameras[0] = new cameraConstructor(0, [0, 0], [0, 0], [1200, 600], {sizeMultiplier: 0.45});
-
-	sim.cameras[0] = new cameraConstructor(0, [0, 0], [0, 0], [600, 600], {sizeMultiplier: 0.45});
-	sim.cameras[1] = new cameraConstructor(1, [0, 0], [600, 0], [600, 600], {sizeMultiplier: 0.1});
+	//RECTANGLE MULTI BOUNCE TEST\\
+	sim.entities.push(new basicRectangle([0, 1201], [10000, 300], {gravity:false,infiniteMass:true,color:"green"}));
+	//sim.entities.push(new basicRectangle([0, 700], [100, 500], {gravity:false,infiniteMass:true}));
+	//sim.entities.push(new basicRectangle([300, 1100], [100, 100], {gravity:false,mass:1,displayNumCollision:true}));
+	//sim.entities.push(new basicRectangle([500, 900], [300, 300], {gravity:false,mass:1,initialVeloc:[-.0001,0]}));
+	//sim.entities.push(new basicRectangle([500, 900], [300, 300], {gravity:false,mass:100,initialVeloc:[-.0001,0]}));
+	//sim.entities.push(new basicRectangle([500, 900], [300, 300], {gravity:false,mass:10000,initialVeloc:[-.0001,0]}));
+	//sim.entities.push(new basicRectangle([500, 900], [300, 300], {gravity:false,mass:1000000,initialVeloc:[-0.0001,0]}));
+	//sim.entities.push(new basicRectangle([500, 900], [300, 300], {gravity:false,mass:100000000,initialVeloc:[-0.0001,0]}));
+	//sim.entities.push(new basicRectangle([500, 900], [300, 300], {gravity:false,mass:10000000000,initialVeloc:[-0.0001,0]}));
+	//sim.entities.push(new basicRectangle([500, 900], [300, 300], {gravity:false,mass:1000000000000,initialVeloc:[-0.0001,0]}));
+	//sim.entities.push(new basicRectangle([500, 900], [300, 300], {gravity:false,mass:100000000000000,initialVeloc:[-0.00001,0]})); //Works but slow af
+	for(var i = 0; i < 6; i++){
+		var k = 0;
+		var q = i;
+		var s = i;
+		if(i > 3){
+			k=1;
+			q-=4;
+		}
+		sim.cameras.push(new cameraConstructor(i, [1000*i, 400], [300*q, 300*k], [300, 300], {sizeMultiplier: 0.3}));
+		sim.entities.push(new basicRectangle([1000*i, 700], [100, 500], {gravity:false,infiniteMass:true}));
+		sim.entities.push(new basicRectangle([200+1000*i, 1100], [100, 100], {gravity:false,mass:1,displayNumCollision:true}));
+		sim.entities.push(new basicRectangle([400+1000*i, 1100-s*100], [100+s*100, 100+s*100], {gravity:false,mass:Math.pow(10,2*i),initialVeloc:[-.0001,0],color:"gray"}));
+	}
+	// sim.cameras[0] = new cameraConstructor(0, [0, 0], [0, 0], [600, 600], {sizeMultiplier: 0.45});
+	// sim.cameras[1] = new cameraConstructor(1, [0, 0], [600, 0], [600, 600], {sizeMultiplier: 0.1});
 
 
 
 	var updateLoop = setInterval(function loop(){
-		sim.loop();
-	}, 20);
+		for(var i = 0; i < 5000; i++){
+			sim.loop();
+		}
+	}, 1);
 	requestAnimationFrame(drawLoop);
 	function drawLoop(){
 		cvs.ctx.clearRect(0, 0, cvs.width, cvs.height);
