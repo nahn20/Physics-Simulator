@@ -59,7 +59,7 @@ var cvs = {
 						dim : [0,0],
 					}
 					for(var k = 0; k < sim.entities.length; k++){
-						if(isCurrentRectCollision(mouseEntity,sim.entities[k]).both == true){
+						if(isRectRectCollision(0, mouseEntity,sim.entities[k]).both == true){
 							console.log(sim.entities[k]);
 							if(sim.keyMap[49]){
 								if(sim.selection[0] == sim.entities[k]){

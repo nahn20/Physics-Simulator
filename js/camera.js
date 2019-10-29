@@ -1,3 +1,4 @@
+var toDraw = [];
 function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], options){
     this.number = number;
 	this.pos = pos;
@@ -32,6 +33,8 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
 						thisCam.drawText(display);
 					}
 					break;
+				case "circle":
+					thisCam.drawCircle(obj);
 				case "spring":
 					thisCam.drawSpring(obj);
 					break;
@@ -50,6 +53,10 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
         for(var i = 0; i < sim.entities.length; i++){ //Drawing all entities
 			caseDraw(sim.entities[i], this);
 		}
+		for(var i = 0; i < toDraw.length; i++){
+			caseDraw(toDraw[i], this);
+		}
+		toDraw = [];
 		for(var i = 0; i < sim.selection.length; i++){ //Drawing borders for selection tool
 			if(sim.selection[i] != null){
 				var copy = {
@@ -140,7 +147,7 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
 		}
 	}
     this.drawCircle = function(obj){
-        if(this.onScreen(obj.pos[0]-obj.radius, obj.pos[1]-obj.radius, obj.radius*2, obj.radius*2)){
+        if(this.onScreen(obj.pos[0]-obj.dim[0], obj.pos[1]-obj.dim[0], obj.dim[0]*2, obj.dim[0]*2)){
             if(obj.color){
                 color = obj.color;
             }
@@ -151,10 +158,10 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
 
                 cvs.ctx.beginPath();
                 cvs.ctx.fillStyle=color;
-                cvs.ctx.arc(this.screenPos[0]+this.sizeMultiplier*(obj.pos[0] - this.pos[0]), this.screenPos[1]+this.sizeMultiplier*(obj.pos[1] - this.pos[1]), this.sizeMultiplier*obj.radius, 0, 2*Math.PI);
+                cvs.ctx.arc(this.screenPos[0]+this.sizeMultiplier*(obj.pos[0] - this.pos[0]), this.screenPos[1]+this.sizeMultiplier*(obj.pos[1] - this.pos[1]), this.sizeMultiplier*obj.dim[0], 0, 2*Math.PI);
                 cvs.ctx.fill();
             cvs.ctx.restore();
-        }
+		}
     }
     this.drawLine = function(startx, starty, endx, endy, color="black"){
         if(this.onScreen(startx, starty, endx-startx, endy-starty)){
