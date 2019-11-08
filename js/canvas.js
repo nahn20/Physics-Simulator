@@ -57,9 +57,12 @@ var cvs = {
 					var mouseEntity = {
 						pos : [mouseInEngineX, mouseInEngineY],
 						dim : [0,0],
+						rcom : [0, 0],
+						rAngle : 0,
+						type : "block",
 					}
 					for(var k = 0; k < sim.entities.length; k++){
-						if(isRectRectCollision(0, mouseEntity,sim.entities[k]).both == true){
+						if(isCollision(0, mouseEntity,sim.entities[k]).both == true){
 							console.log(sim.entities[k]);
 							if(sim.keyMap[49]){
 								if(sim.selection[0] == sim.entities[k]){

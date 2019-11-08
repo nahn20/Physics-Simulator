@@ -157,14 +157,14 @@ function startEngine(){
 	sim.cameras[2] = new cameraConstructor(2, [0, -200], [600, 0], [600, 600], {sizeMultiplier: 0.5});
 	*/
 	
-
+	/*
 	//RECTANGLE COLLISION TEST 1\\
 	
 	sim.entities.push(new basicObject("block", [450, 450], [30, 30], {gravity:false, initialVeloc:[10, 0], density:0.1}));
 	//sim.entities.push(new basicObject("block", [850, 0], [60, 60], {gravity:false, initialVeloc:[0, 6]}));
 	sim.entities.push(new basicObject("block", [800, 450], [60, 60], {gravity:false, initialVeloc:[1, 0], density:0.1}));
 	//sim.entities.push(new basicObject("block", [1000, 350], [90, 90], {gravity:true, initialVeloc:[1, 3], density:0.1}));
-	
+	*/
 
 
 	/*
@@ -194,6 +194,7 @@ function startEngine(){
 	sim.entities.push(new basicObject("block", [1200, 0], [60, 60], {mass:100, initialVeloc:[0, 10]}));
 	sim.entities.push(new basicObject("block", [-600, 700], [60, 60], {mass:100, initialVeloc:[10, -5]}));
 	*/
+
 	/*
 	//RECTANGLE MULTI BOUNCE PI TEST\\
 	sim.entities.push(new basicObject("block", [0, 1201], [10000, 300], {gravity:false,infiniteMass:true,color:"green"}));
@@ -221,20 +222,27 @@ function startEngine(){
 		sim.entities.push(new basicObject("block", [400+1000*i, 1100-s*100], [100+s*100, 100+s*100], {gravity:false,mass:Math.pow(10,2*i),initialVeloc:[-.0001,0],color:"gray"}));
 	}
 	*/
-
+	/*
 	//Circle Collision Test\\
-	// sim.entities.push(new basicObject("circle", [100, 100], [90], {initialVeloc: [3, 2],gravity:true, density:0.1}));
-	// sim.entities.push(new basicObject("circle", [500, 400], [50], {gravity:true, density:0.1}));
+	sim.entities.push(new basicObject("circle", [100, 100], [90], {initialVeloc: [3, 2],gravity:true, density:0.1}));
+	sim.entities.push(new basicObject("circle", [500, 400], [50], {gravity:true, density:0.1}));
+	*/
 
-	sim.cameras[0] = new cameraConstructor(0, [0, 0], [0, 0], [1200, 600], {sizeMultiplier: 0.45});
-	// sim.cameras[1] = new cameraConstructor(1, [0, 0], [600, 0], [600, 600], {sizeMultiplier: 0.1});
+	//Rotation Test\\
+	//sim.entities.push(new basicObject("block", [450, 450], [100, 100], {gravity:false, initialVeloc:[2, 0], density:0.1, rAngle:0, interactable:false}));
+	//sim.entities.push(new basicObject("circle", [450, 450], [15], {gravity:false, initialVeloc:[2, 0], density:0.1, interactable:false}));
+	sim.entities.push(new basicObject("block", [600, 400], [100, 100], {gravity:false, initialVeloc:[10, 0], rAngle:0, rInitialVeloc:5, autoReturnColor:"black", collisionFlash:"red"}));
+	sim.entities.push(new basicObject("block", [1100, 400], [200, 100], {gravity:false, initialVeloc:[5, 0], rAngle:0, rInitialVeloc:1, autoReturnColor:"black", collisionFlash:"red"}));
+	sim.entities.push(new basicObject("block", [300, 0], [50, 1000], {gravity:false, initialVeloc:[0, 0], rAngle:0, rInitialVeloc:0, infiniteMass:true, infiniteI:true, autoReturnColor:"black", collisionFlash:"red"}));
+	sim.entities.push(new basicObject("block", [1500, 0], [50, 1000], {gravity:false, initialVeloc:[0, 0], rAngle:0, rInitialVeloc:0, infiniteMass:true, infiniteI:true, autoReturnColor:"black", collisionFlash:"red"}));
+	//sim.entities.push(new basicObject("block", [100, 150], [300, 10], {gravity:false, density:0.1, rAngle:0, interactable:true, rInitialVeloc:-5}));
+
+	sim.cameras[0] = new cameraConstructor(0, [0, 0], [0, 0], [1200, 600], {sizeMultiplier: 0.6});
+	//sim.cameras[1] = new cameraConstructor(1, [0, 0], [600, 0], [600, 600], {sizeMultiplier: 0.1});
 	
 
 
 	var updateLoop = setInterval(function loop(){
-		// for(var i = 0; i < 1; i++){
-		// 	sim.loop();
-		// }
 		sim.loop();
 	}, 20);
 	requestAnimationFrame(drawLoop);

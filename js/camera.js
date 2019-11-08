@@ -1,4 +1,14 @@
 var toDraw = [];
+/*
+var pointToDraw = {
+	type : "block",
+	pos : [x, y],
+	dim : [1, 1],
+	color: "black",
+	fill : true,
+}
+toDraw.push(pointToDraw);
+*/
 function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], options){
     this.number = number;
 	this.pos = pos;
@@ -52,6 +62,9 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
 		}
         for(var i = 0; i < sim.entities.length; i++){ //Drawing all entities
 			caseDraw(sim.entities[i], this);
+			if(sim.entities[i].autoReturnColor != false){ //Returns objects to default color. Gets rid of flickering issue with desynced ticks.
+				sim.entities[i].color = sim.entities[i].autoReturnColor;
+			}
 		}
 		for(var i = 0; i < toDraw.length; i++){
 			caseDraw(toDraw[i], this);
@@ -91,38 +104,59 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
         this.overlayRect(0, 0, this.dim[0], this.dim[1], {color: "black", fill: false})
     }
     this.drawRect = function(obj){
-        if(this.onScreen(obj.pos[0], obj.pos[1], obj.dim[0], obj.dim[1])){
-            var color = "black";
-			var fill = false;
-			if(typeof(obj.color) != 'undefined'){
-				color = obj.color
-			}
-			if(typeof(obj.fill) != 'undefined'){
-				fill = obj.fill
-			}
-            cvs.ctx.save();
-                cvs.ctx.beginPath();
-                cvs.ctx.rect(this.screenPos[0], this.screenPos[1], this.dim[0], this.dim[1]);
-                cvs.ctx.clip();
-
-                cvs.ctx.beginPath();
-                if(fill == true){
-                    cvs.ctx.fillStyle = color;
-                    cvs.ctx.fillRect(this.screenPos[0]+this.sizeMultiplier*(obj.pos[0]-this.pos[0]), this.screenPos[1]+this.sizeMultiplier*(obj.pos[1]-this.pos[1]), this.sizeMultiplier*obj.dim[0], this.sizeMultiplier*obj.dim[1], color);
-                }
-                else{
+        //if(this.onScreen(obj.pos[0], obj.pos[1], obj.dim[0], obj.dim[1])){
+		var color = "black";
+		var fill = false;
+		if(typeof(obj.color) != 'undefined'){
+			color = obj.color
+		}
+		if(typeof(obj.fill) != 'undefined'){
+			fill = obj.fill
+		}
+		cvs.ctx.save();
+			cvs.ctx.beginPath();
+			cvs.ctx.rect(this.screenPos[0], this.screenPos[1], this.dim[0], this.dim[1]);
+			cvs.ctx.clip();
+			if(typeof(obj.rAngle) != 'undefined' && obj.rAngle != 0){
+				cvs.ctx.translate(this.screenPos[0]+this.sizeMultiplier*(obj.pos[0]+obj.rcom[0]-this.pos[0]), this.screenPos[1]+this.sizeMultiplier*(obj.pos[1]+obj.rcom[1]-this.pos[1]));
+				cvs.ctx.rotate(Math.PI*obj.rAngle/180);
+				cvs.ctx.beginPath();
+				if(fill == true){
+					cvs.ctx.fillStyle = color;
+					cvs.ctx.fillRect(this.sizeMultiplier*-obj.rcom[0], this.sizeMultiplier*-obj.rcom[1], this.sizeMultiplier*obj.dim[0], this.sizeMultiplier*obj.dim[1], color);
+				}
+				else{
 					if(typeof(obj.lineWidth) != 'undefined'){
 						cvs.ctx.lineWidth = obj.lineWidth;
 					}
 					else{
 						cvs.ctx.lineWidth = 1;
 					}
-                    cvs.ctx.strokeStyle = color;
-                    cvs.ctx.rect(this.screenPos[0]+this.sizeMultiplier*(obj.pos[0]-this.pos[0]), this.screenPos[1]+this.sizeMultiplier*(obj.pos[1]-this.pos[1]), this.sizeMultiplier*obj.dim[0], this.sizeMultiplier*obj.dim[1], color);
-                    cvs.ctx.stroke();
-                }
-            cvs.ctx.restore();
-        }
+					cvs.ctx.strokeStyle = color;
+					cvs.ctx.rect(this.screenPos[0]+this.sizeMultiplier*(obj.pos[0]-this.pos[0]), this.screenPos[1]+this.sizeMultiplier*(obj.pos[1]-this.pos[1]), this.sizeMultiplier*obj.dim[0], this.sizeMultiplier*obj.dim[1], color);
+					cvs.ctx.stroke();
+				}	
+			}
+			else{
+				cvs.ctx.beginPath();
+				if(fill == true){
+					cvs.ctx.fillStyle = color;
+					cvs.ctx.fillRect(this.screenPos[0]+this.sizeMultiplier*(obj.pos[0]-this.pos[0]), this.screenPos[1]+this.sizeMultiplier*(obj.pos[1]-this.pos[1]), this.sizeMultiplier*obj.dim[0], this.sizeMultiplier*obj.dim[1], color);
+				}
+				else{
+					if(typeof(obj.lineWidth) != 'undefined'){
+						cvs.ctx.lineWidth = obj.lineWidth;
+					}
+					else{
+						cvs.ctx.lineWidth = 1;
+					}
+					cvs.ctx.strokeStyle = color;
+					cvs.ctx.rect(this.screenPos[0]+this.sizeMultiplier*(obj.pos[0]-this.pos[0]), this.screenPos[1]+this.sizeMultiplier*(obj.pos[1]-this.pos[1]), this.sizeMultiplier*obj.dim[0], this.sizeMultiplier*obj.dim[1], color);
+					cvs.ctx.stroke();
+				}
+			}
+		cvs.ctx.restore();
+        //}
 	}
 	this.drawSpring = function(obj){
 		if(obj.angle == 90){
