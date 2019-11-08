@@ -438,7 +438,7 @@ function isRectRectCollision(whenCalculate, rect1, rect2){ //whenCalculate = 0 f
 			r2[i][1] += rect2.pos[1]+rect2.rcom[1];
 		}
 		//\\
-		var counter = 0; //If two intersections happen, it's confirmed intersect (I think)
+		var counter = 0;
 		for(var main = 0; main < 4 && counter != 1; main++){
 			var coord11 = [r1[main][0], r1[main][1]];
 			var cycleBack1 = main-1;
