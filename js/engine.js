@@ -232,7 +232,7 @@ function startEngine(){
 	//sim.entities.push(new basicObject("block", [450, 450], [100, 100], {gravity:false, initialVeloc:[2, 0], density:0.1, rAngle:0, interactable:false}));
 	//sim.entities.push(new basicObject("circle", [450, 450], [15], {gravity:false, initialVeloc:[2, 0], density:0.1, interactable:false}));
 	sim.entities.push(new basicObject("block", [600, 400], [100, 100], {gravity:false, initialVeloc:[10, 0], rAngle:0, rInitialVeloc:5, autoReturnColor:"black", collisionFlash:"red"}));
-	sim.entities.push(new basicObject("block", [1100, 400], [200, 100], {gravity:false, initialVeloc:[5, 0], rAngle:0, rInitialVeloc:1, autoReturnColor:"black", collisionFlash:"red"}));
+	sim.entities.push(new basicObject("block", [1100, 400], [200, 100], {gravity:false, initialVeloc:[5, 0], rAngle:0, rInitialVeloc:3, autoReturnColor:"black", collisionFlash:"red"}));
 	sim.entities.push(new basicObject("block", [300, 0], [50, 1000], {gravity:false, initialVeloc:[0, 0], rAngle:0, rInitialVeloc:0, infiniteMass:true, infiniteI:true, autoReturnColor:"black", collisionFlash:"red"}));
 	sim.entities.push(new basicObject("block", [1500, 0], [50, 1000], {gravity:false, initialVeloc:[0, 0], rAngle:0, rInitialVeloc:0, infiniteMass:true, infiniteI:true, autoReturnColor:"black", collisionFlash:"red"}));
 	//sim.entities.push(new basicObject("block", [100, 150], [300, 10], {gravity:false, density:0.1, rAngle:0, interactable:true, rInitialVeloc:-5}));

@@ -439,7 +439,7 @@ function isRectRectCollision(whenCalculate, rect1, rect2){ //whenCalculate = 0 f
 		}
 		//\\
 		var counter = 0; //If two intersections happen, it's confirmed intersect (I think)
-		for(var main = 0; main < 4; main++){
+		for(var main = 0; main < 4 && counter != 1; main++){
 			var coord11 = [r1[main][0], r1[main][1]];
 			var cycleBack1 = main-1;
 			if(cycleBack1 < 0){
@@ -447,7 +447,7 @@ function isRectRectCollision(whenCalculate, rect1, rect2){ //whenCalculate = 0 f
 			}
 			var coord12 = [r1[cycleBack1][0], r1[cycleBack1][1]];
 			var line1 = [coord11, coord12]
-			for(var alt = 0; alt < 4; alt++){
+			for(var alt = 0; alt < 4 && counter != 1; alt++){
 				var coord21 = [r2[alt][0], r2[alt][1]];
 				var cycleBack2 = alt-1;
 				if(cycleBack2 < 0){
@@ -459,11 +459,8 @@ function isRectRectCollision(whenCalculate, rect1, rect2){ //whenCalculate = 0 f
 					counter++;
 				}
 			}
-			if(counter == 2){
-				main = 4;
-			}
 		}
-		if(counter == 2){
+		if(counter >= 1){
 			isCollision.both = true;
 		}
 		else{ //Line intersection test doesn't catch rectangles inside of each other. 
