@@ -157,6 +157,7 @@ function basicObject(type="block", pos=[0,0],dim=[10,10],options){
 							vyFinal = -this.veloc[1];
 						}
 						if(!this.infiniteI && !sim.entities[i].infiniteI){ //Rotational conservation of momentum
+
 							var a = {
 								m : this.rI,
 								v : this.rVeloc,
@@ -342,6 +343,7 @@ function isRectRectCollision(whenCalculate, rect1, rect2){ //whenCalculate = 0 f
 		x : false,
 		y : false,
 		both : false,
+		
 	}
 	var angleCheck = {
 		a1 : 0, 
