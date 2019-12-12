@@ -6,6 +6,7 @@ var pointToDraw = {
 	dim : [1, 1],
 	color: "black",
 	fill : true,
+	rAngle : 0,
 }
 toDraw.push(pointToDraw);
 */

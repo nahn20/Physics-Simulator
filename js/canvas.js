@@ -17,7 +17,7 @@ var cvs = {
 					var centerInEngineX = (sim.cameras[i].dim[0]/2)/sim.cameras[i].sizeMultiplier + sim.cameras[i].pos[0];
 					var centerInEngineY = (sim.cameras[i].dim[1]/2)/sim.cameras[i].sizeMultiplier + sim.cameras[i].pos[1];
 					sim.cameras[i].sizeMultiplier -= shift;
-					sim.cameras[i].sizeMultiplier = Math.min(Math.max(parseFloat(sim.cameras[i].sizeMultiplier), 0.03), 2); //Restricts size multiplier
+					sim.cameras[i].sizeMultiplier = Math.min(Math.max(parseFloat(sim.cameras[i].sizeMultiplier), 0.1), 20); //Restricts size multiplier
 
 					sim.cameras[i].pos[0] = centerInEngineX - sim.cameras[i].dim[0]/(2*sim.cameras[i].sizeMultiplier)
 					sim.cameras[i].pos[1] = centerInEngineY - sim.cameras[i].dim[1]/(2*sim.cameras[i].sizeMultiplier)

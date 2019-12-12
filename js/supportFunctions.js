@@ -27,3 +27,12 @@ function scalarMult(c, a){
 	}
 	return a;
 }
+function sqr(a){
+	return a*a;
+}
+function findMag(v){
+	return Math.sqrt(v[0]*v[0]+v[1]*v[1]);
+}
+function pythag(a, b){
+	return Math.sqrt(sqr(a)+sqr(b));
+}

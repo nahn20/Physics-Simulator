@@ -1,4 +1,4 @@
-const gravity = 9.81/250;
+const gravity = 9.81/500; //Should be 50
 function engine(){
 	this.time = 0;
 	this.entities = [];
@@ -228,7 +228,8 @@ function startEngine(){
 	sim.entities.push(new basicObject("circle", [500, 400], [50], {gravity:true, density:0.1}));
 	*/
 
-	//Rotation Test\\
+	/*
+	//Rotation Collision Test\\
 	//sim.entities.push(new basicObject("block", [450, 450], [100, 100], {gravity:false, initialVeloc:[2, 0], density:0.1, rAngle:0, interactable:false}));
 	//sim.entities.push(new basicObject("circle", [450, 450], [15], {gravity:false, initialVeloc:[2, 0], density:0.1, interactable:false}));
 	sim.entities.push(new basicObject("block", [600, 400], [100, 100], {gravity:false, initialVeloc:[10, 0], rAngle:0, rInitialVeloc:5, autoReturnColor:"black", collisionFlash:"red"}));
@@ -236,9 +237,17 @@ function startEngine(){
 	sim.entities.push(new basicObject("block", [300, 0], [50, 1000], {gravity:false, initialVeloc:[0, 0], rAngle:0, rInitialVeloc:0, infiniteMass:true, infiniteI:true, autoReturnColor:"black", collisionFlash:"red"}));
 	sim.entities.push(new basicObject("block", [1500, 0], [50, 1000], {gravity:false, initialVeloc:[0, 0], rAngle:0, rInitialVeloc:0, infiniteMass:true, infiniteI:true, autoReturnColor:"black", collisionFlash:"red"}));
 	//sim.entities.push(new basicObject("block", [100, 150], [300, 10], {gravity:false, density:0.1, rAngle:0, interactable:true, rInitialVeloc:-5}));
+	*/
 
+	sim.entities.push(new basicObject("block", [600, 200], [50, 50], {gravity:false, initialVeloc:[10, 0], rAngle:1, rInitialVeloc:10,autoReturnColor:"black", collisionFlash:"red"}));
+	sim.entities.push(new basicObject("block", [1100, 400], [400, 50], {gravity:false, initialVeloc:[0, 0], rAngle:60, rInitialVeloc:0, autoReturnColor:"black", collisionFlash:"red"}));
+	/*
+	//Basic Rotation Collision Test\\
+	sim.entities.push(new basicObject("block", [10, -5], [1, 1], {gravity:false, initialVeloc:[0, .2], rInitialVeloc: 1}))
+	sim.entities.push(new basicObject("block", [0, 0], [1, 1], {gravity:false, initialVeloc:[.35, 0], rAngle:0, rInitialVeloc:5, autoReturnColor:"black", collisionFlash:"red"}));
+	sim.cameras[0] = new cameraConstructor(0, [-30, -20], [0, 0], [1200, 600], {sizeMultiplier: 12});
+	*/
 	sim.cameras[0] = new cameraConstructor(0, [0, 0], [0, 0], [1200, 600], {sizeMultiplier: 0.6});
-	//sim.cameras[1] = new cameraConstructor(1, [0, 0], [600, 0], [600, 600], {sizeMultiplier: 0.1});
 	
 
 
@@ -271,13 +280,13 @@ function startEngine(){
 			var a = sim.selection[0];
 			var b = sim.selection[1];
 			if(a != null && b == null){
-				console.log("Selection 1 Kinetic Energy: " + a.mass*Math.pow(findMagnitude(a.veloc), 2));
+				console.log("Selection 1 Kinetic Energy: " + a.mass*Math.pow(findMag(a.veloc), 2));
 			}
 			if(b != null && a == null){
-				console.log("Selection 2 Kinetic Energy: " + b.mass*Math.pow(findMagnitude(b.veloc), 2));
+				console.log("Selection 2 Kinetic Energy: " + b.mass*Math.pow(findMag(b.veloc), 2));
 			}
 			if(a != null && b != null){
-				console.log("Both Selections Combined Kinetic Energy: " + (a.mass*Math.pow(findMagnitude(a.veloc), 2)+b.mass*Math.pow(findMagnitude(b.veloc), 2)));
+				console.log("Both Selections Combined Kinetic Energy: " + (a.mass*Math.pow(findMag(a.veloc), 2)+b.mass*Math.pow(findMag(b.veloc), 2)));
 			}
 		}
 		if(event.keyCode == 32){ // 
@@ -306,7 +315,4 @@ function startEngine(){
 	document.addEventListener("keyup", function(event){
 		sim.keyMap[event.keyCode] = false;
 	});
-}
-function findMagnitude(v){
-	return Math.sqrt(v[0]*v[0]+v[1]*v[1]);
 }

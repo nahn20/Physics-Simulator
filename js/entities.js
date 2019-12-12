@@ -14,6 +14,7 @@ function basicObject(type="block", pos=[0,0],dim=[10,10],options){
 	//\\
 	this.dim = dim;
 	this.mass = 0;
+	this.density = 0;
 	this.gravity = true;
 	this.infiniteMass = false;
 	this.infiniteI = false;
@@ -42,6 +43,12 @@ function basicObject(type="block", pos=[0,0],dim=[10,10],options){
 	}
 	if(typeof(options.mass) != 'undefined'){ //Checks for set mass first
 		this.mass = options.mass;
+		if(this.type == "block"){
+			this.density = this.mass/(this.dim[0]*this.dim[1]);
+		}
+		if(this.type == "circle"){
+			this.density = this.mass/(Math.PI*this.dim[0]*this.dim[0]);
+		}
 	}
 	else{
 		var density = 0.1;
@@ -54,6 +61,7 @@ function basicObject(type="block", pos=[0,0],dim=[10,10],options){
 		if(this.type == "circle"){
 			this.mass = density*Math.PI*this.dim[0]*this.dim[0];
 		}
+		this.density = density;
 	}
 	if(typeof(options.rAngle) != 'undefined'){
 		this.rAngle = options.rAngle;
@@ -120,6 +128,7 @@ function basicObject(type="block", pos=[0,0],dim=[10,10],options){
 		}
 		for(var i = 0; i < sim.entities.length; i++){
 			if(sim.entities[i] != this && sim.entities[i].interactable == true){
+				var collisionReturns = isCollision(0, this, sim.entities[i]);
 				if(isRectRectCollision(0, this, sim.entities[i]).both && sim.entities[i].type == "spring"){ //Spring block collision
 					var force = sumArray(this.force[0]);
 					sim.entities[i].force[0].push(force);
@@ -128,7 +137,7 @@ function basicObject(type="block", pos=[0,0],dim=[10,10],options){
 					sim.entities[i].force[1].push(force);
 					this.force[1].push(-force);
 				} //Redo the structure below: It runs all the checks
-				else if(isCollision(0, this,sim.entities[i]).both){
+				else if(collisionReturns.both){
 					if(this.collisionFlash != false){
 						this.color = this.collisionFlash;
 					}
@@ -137,6 +146,7 @@ function basicObject(type="block", pos=[0,0],dim=[10,10],options){
 						var vyFinal;
 						var vrFinal;
 						this.collisionCounter++;
+						//Need to fix directionality of rotationCoords
 						if(!this.infiniteMass && !sim.entities[i].infiniteMass){ //Translational conservation of momentum
 							var a = {
 								m : this.mass,
@@ -157,17 +167,48 @@ function basicObject(type="block", pos=[0,0],dim=[10,10],options){
 							vyFinal = -this.veloc[1];
 						}
 						if(!this.infiniteI && !sim.entities[i].infiniteI){ //Rotational conservation of momentum
-
-							var a = {
-								m : this.rI,
-								v : this.rVeloc,
-							}; //Using variable names from my equation, sorry for bad naming convention
-							var b = {
-								m : sim.entities[i].rI,
-								v : sim.entities[i].rVeloc,
+							function findVelocFromRotation(obj, collisionCoords){
+								var deltaX = collisionCoords[0]-obj.pos[0]+obj.rcom[0];
+								var deltaY = collisionCoords[1]-obj.pos[1]+obj.rcom[1];
+								var rCoords = [deltaY, -deltaX];
+								var mag = findMag(rCoords);
+								rCoords[0] /= mag; //Turning into unit vector
+								rCoords[1] /= mag;
+								var distance = Math.sqrt(sqr(deltaX)+sqr(deltaY));
+								var stuff = {
+									x : distance*obj.rVeloc*rCoords[0],
+									y : distance*obj.rVeloc*rCoords[1],
+									distance : distance,
+								}
+								return stuff;
 							}
 							var k = this.energyLossCoefficient*sim.entities[i].energyLossCoefficient;
-							vrFinal = this.bigCollisionMomentumEquation(a, b, k);
+							var aStuff = findVelocFromRotation(this, collisionReturns.collisionCoords);
+							var bStuff = findVelocFromRotation(sim.entities[i], collisionReturns.collisionCoords);
+							var a = {
+								m : this.density,
+								v : aStuff.x+this.veloc[0],
+							}; //Using variable names from my equation, sorry for bad naming convention
+							var b = {
+								m : sim.entities[i].density,
+								v : bStuff.x+sim.entities[i].veloc[0],
+							}
+							var vx = this.bigCollisionMomentumEquation(a, b, k);
+							a.v = aStuff.y + this.veloc[1];
+							b.v = bStuff.y + sim.entities[i].veloc[1];
+							var vy = this.bigCollisionMomentumEquation(a, b, k);
+							vx -= this.veloc[0];
+							vy -= this.veloc[1];
+							var vr = [vx, vy];
+							var u = [aStuff.x, aStuff.y];
+							var mag = findMag(u);
+							if(mag != 0){
+								u[0] /= mag;
+								u[1] /= mag;
+							}
+							var projScalar = vr[0]*u[0]+vr[1]*u[1];
+							vr = scalarMult(projScalar, u);
+							vrFinal = findMag(vr)/aStuff.distance;
 						}
 						else if(sim.entities[i].infiniteI){
 							vrFinal = -this.rVeloc;
@@ -343,7 +384,7 @@ function isRectRectCollision(whenCalculate, rect1, rect2){ //whenCalculate = 0 f
 		x : false,
 		y : false,
 		both : false,
-		
+		collisionCoords : [],
 	}
 	var angleCheck = {
 		a1 : 0, 
@@ -440,8 +481,8 @@ function isRectRectCollision(whenCalculate, rect1, rect2){ //whenCalculate = 0 f
 			r2[i][1] += rect2.pos[1]+rect2.rcom[1];
 		}
 		//\\
-		var counter = 0;
-		for(var main = 0; main < 4 && counter != 1; main++){
+		var foundCollision = false;
+		for(var main = 0; main < 4 && foundCollision == false; main++){
 			var coord11 = [r1[main][0], r1[main][1]];
 			var cycleBack1 = main-1;
 			if(cycleBack1 < 0){
@@ -449,7 +490,7 @@ function isRectRectCollision(whenCalculate, rect1, rect2){ //whenCalculate = 0 f
 			}
 			var coord12 = [r1[cycleBack1][0], r1[cycleBack1][1]];
 			var line1 = [coord11, coord12]
-			for(var alt = 0; alt < 4 && counter != 1; alt++){
+			for(var alt = 0; alt < 4 && foundCollision == false; alt++){
 				var coord21 = [r2[alt][0], r2[alt][1]];
 				var cycleBack2 = alt-1;
 				if(cycleBack2 < 0){
@@ -457,12 +498,23 @@ function isRectRectCollision(whenCalculate, rect1, rect2){ //whenCalculate = 0 f
 				}
 				var coord22 = [r2[cycleBack2][0], r2[cycleBack2][1]];
 				var line2 = [coord21, coord22];
-				if(isLineLineCollision(line1, line2)){
-					counter++;
+				var isLineLineReturn = isLineLineCollision(line1, line2);
+				if(isLineLineReturn.both){
+					// var pointToDraw = {
+					// 	type : "block",
+					// 	pos : [isLineLineReturn.x-5, isLineLineReturn.y-5],
+					// 	dim : [10, 10],
+					// 	color: "purple",
+					// 	fill : true,
+					// 	rAngle : 0,
+					// }
+					// toDraw.push(pointToDraw);
+					foundCollision = true;
+					isCollision.collisionCoords = [isLineLineReturn.x, isLineLineReturn.y];
 				}
 			}
 		}
-		if(counter >= 1){
+		if(foundCollision){
 			isCollision.both = true;
 		}
 		else{ //Line intersection test doesn't catch rectangles inside of each other. 
@@ -475,6 +527,7 @@ function isRectRectCollision(whenCalculate, rect1, rect2){ //whenCalculate = 0 f
 			var coordWRTTopLeft = [rect1.rcom[0]-modifiedCoord[0], rect1.rcom[1]-modifiedCoord[1]];
 			if(coordWRTTopLeft[0] > 0 && coordWRTTopLeft[0] < rect1.dim[0] && coordWRTTopLeft[1] > 0 && coordWRTTopLeft[1] < rect1.dim[1]){
 				isCollision.both = true;
+				isCollision.collisionCoords = coordRect1Center;
 			}
 			else{
 				var inverseMatrix2 = findInverse2x2(matrix2);
@@ -484,6 +537,7 @@ function isRectRectCollision(whenCalculate, rect1, rect2){ //whenCalculate = 0 f
 				var coordWRTTopLeft = [rect2.rcom[0]-modifiedCoord[0], rect2.rcom[1]-modifiedCoord[1]];
 				if(coordWRTTopLeft[0] > 0 && coordWRTTopLeft[0] < rect2.dim[0] && coordWRTTopLeft[1] > 0 && coordWRTTopLeft[1] < rect2.dim[1]){
 					isCollision.both = true;
+					isCollision.collisionCoords = coordRect2Center;
 				}
 			}
 		}
@@ -513,6 +567,7 @@ function isCircRectCollision(whenCalculate, circ, rect){
 	}
 	var isCollision = {
 		both : false,
+		collisionCoords : [],
 	}
 	var nearestX = Math.max(r.x1, Math.min(c.x, r.x2)); //Working
 	var nearestY = Math.max(r.y1, Math.min(c.y, r.y2));
@@ -524,6 +579,7 @@ function isCircRectCollision(whenCalculate, circ, rect){
 	// }
 	// toDraw.push(point)
 	if(Math.sqrt(Math.pow(nearestX-c.x, 2) + Math.pow(nearestY-c.y, 2)) < c.r){
+		isCollision.collisionCoords = [nearestX, nearestY];
 		isCollision.both = true;
 	}
 	else if(c.x > r.x1 && c.x < r.x2 && c.y > r.y1 && c.y < r.y2){ //Circle inside check
@@ -551,9 +607,12 @@ function isCircCircCollision(whenCalculate, circ1, circ2){
 	}
 	var isCollision = {
 		both : false,
+		collisionCoords : [],
 	}
-	if(Math.sqrt(Math.pow(c1.x-c2.x, 2) + Math.pow(c1.y-c2.y, 2)) < c1.r + c2.r){
+	var distance = Math.sqrt(Math.pow(c1.x-c2.x, 2) + Math.pow(c1.y-c2.y, 2));
+	if(distance < c1.r + c2.r){
 		isCollision.both = true;
+		isCollision.collisionCoords = [c1.x+(c1.r/distance)*(c2.x-c1.x), c1.y+(c1.r/distance)*(c2.y-c1.y)];
 	}
 	return isCollision;
 }
@@ -563,26 +622,36 @@ function isLineLineCollision(line1, line2){
 	//Line2: [[x, y], [x, y]]
 	var m1 = (line1[1][1]-line1[0][1])/(line1[1][0]-line1[0][0]); //I'm so sorry to whoever reads this
 	var m2 = (line2[1][1]-line2[0][1])/(line2[1][0]-line2[0][0]);
+	var returnVar = {
+		both : false,
+		x : 0,
+		y : 0,
+	}
 
 	if(line1[0][0] == line1[1][0] || line2[0][0] == line2[1][0]){ //If infinite slope. Vertical line
 		var y; //Y coordinate of intersection pt
 		if(line1[0][0] == line1[1][0]){
 			y = line2[1][1]+m2*(line1[0][0]-line2[1][0]);
+			returnVar.x = line1[0][0];
 		}
 		if(line2[0][0] == line2[1][0]){
 			y = line1[1][1]+m1*(line2[0][0]-line1[1][0]);
+			returnVar.x = line2[0][0];
 		}
 		if(y > Math.min(line1[0][1], line1[1][1]) && y < Math.max(line1[0][1], line1[1][1]) && y > Math.min(line2[0][1], line2[1][1]) && y < Math.max(line2[0][1], line2[1][1])){
-			return true;
+			returnVar.y = y;
+			returnVar.both = true;
 		}
 	}
 	else{
 		var x = ((line2[1][1]-m2*line2[1][0])-(line1[1][1]-m1*line1[1][0]))/(m1-m2);
 		if(x >= Math.min(line1[0][0], line1[1][0]) && x <= Math.max(line1[0][0], line1[1][0]) && x >= Math.min(line2[0][0], line2[1][0]) && x <= Math.max(line2[0][0], line2[1][0])){
-			return true;
+			returnVar.x = x;
+			returnVar.y = m1*(x-line1[0][0])+line1[0][1];
+			returnVar.both = true;
 		}
 	}
-	return false;
+	return returnVar;
 }
 function sumArray(array){
 	return array.reduce((a, b) => a + b, 0);
