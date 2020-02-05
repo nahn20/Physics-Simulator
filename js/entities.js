@@ -138,9 +138,8 @@ function basicObject(type="block", pos=[0,0],dim=[10,10],options){
 					this.force[1].push(-force);
 				} //Redo the structure below: It runs all the checks
 				else if(collisionReturns.both){
-					console.log("DELETE ME: COLLISION!!!!")
 					if(collisionReturns.margin < 0){
-						console.log("Split Error: Margin " + collisionReturns.margin);
+						//console.log("Split Error: Margin " + collisionReturns.margin);
 					}
 					if(this.collisionFlash != false){
 						this.color = this.collisionFlash;
@@ -253,14 +252,23 @@ function basicObject(type="block", pos=[0,0],dim=[10,10],options){
 		//STANDARD
 		this.veloc[0] += split*this.accel[0];
 		this.veloc[1] += split*this.accel[1];
-		if(this.accel[0] != 0){
-			console.log("Delta V: " + split*this.accel[0]);
-		}
 		this.rVeloc += split*this.rAccel;
 		if(!this.updatePosOverride){
 			this.pos[0] += split*this.veloc[0];
 			this.pos[1] += split*this.veloc[1];
 			this.rAngle += split*this.rVeloc;
+		}
+		for(var i = 0; i < sim.entities.length; i++){
+			if(this != sim.entities[i]){ //This is incredibly unintelligent. TODO: Fix this and the other place you do this
+				var collisionReturns = isCollision(0, this, sim.entities[i]);
+				while(collisionReturns.both){
+					var objiCenter = findCenterOf(sim.entities[i]);
+					var nudgeVector = normalizeVector([this.pos[0]-objiCenter[0], this.pos[1]-objiCenter[1]]);
+					//TODO: Fix. This only happens for entity i=0 since it gets nudged and entity i=1 doesn't collide. 
+					this.pos = addVectors(this.pos, nudgeVector);
+					collisionReturns = isCollision(0, this, sim.entities[i]);
+				}
+			}
 		}
 	}
 	this.determineTickSplit = function(split){
@@ -412,6 +420,20 @@ function spring(supportBlock,angle=90,equilibrium=100,otherDim=30,k=30, options)
 
 		}
 	}
+}
+function findCenterOf(obj){ //Returns as [x, y] the approximate center coords of the shape
+	if(obj.type == "rect"){
+		if(typeof(rect1.rAngle) != 'undefined' || rect1.rAngle % 180 == 0){ //standard rect
+			return [obj.pos[0]+obj.dim[0]/2, obj.pos[1]+obj.dim[1]/2];
+		}
+		else{
+			console.log("ERROR: findCenterOf(). You didn't code this yet")
+		}
+	}
+	if(obj.type == "circle"){
+		return obj.pos;
+	}
+	console.log("ERROR: findCenterOf(). Shape not found: " + obj.shape)
 }
 function isCollision(whenCalculate, obj1, obj2){
 	var maxMargin = 0.1;

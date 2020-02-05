@@ -22,15 +22,15 @@ function engine(){
 			do{
 				count++;
 				if(count < 500){
-				flag = false;
-				for(var i = 0; i < this.entities.length; i++){
-					var s = this.entities[i].determineTickSplit(lowestSplit);
-					if(s < lowestSplit){
-						lowestSplit = s;
-						flag = true;
+					flag = false;
+					for(var i = 0; i < this.entities.length; i++){
+						var s = this.entities[i].determineTickSplit(lowestSplit);
+						if(s < lowestSplit){
+							lowestSplit = s;
+							flag = true;
+						}
 					}
 				}
-			}
 			}
 			while(flag && lowestSplit > minSplit);
 			split = lowestSplit;
@@ -43,10 +43,9 @@ function engine(){
 			for(var i = 0; i < this.entities.length; i++){
 				this.entities[i].updateForces();
 			}
-			//TODO: Balls aren't properly reacting to each other. One ball gets infinitely close to the other (and a collision is detected), but the collision isn't driving them apart.
-			console.log(split)
 			splitSum += split;
 			split = 1-splitSum;
+			console.log(split)
 		}
 		while(Math.abs(splitSum-1) > minSplit && split > minSplit);
 		if(splitSum != 1){
@@ -284,7 +283,7 @@ function startEngine(){
 	sim.entities.push(new basicObject("circle", [100, 500], [50], {initialVeloc: [49, 0],gravity:false, density:0.1, color:"red"}));
 	// sim.entities.push(new basicObject("circle", [400+300*0, 500], [50], {initialVeloc: [0, 0],gravity:false, density:0.1, color:"blue"}));
 	// sim.entities.push(new basicObject("circle", [400+300*1, 500], [50], {initialVeloc: [0, 0],gravity:false, density:0.1, color:"black"}));
-	for(var i = 0; i < 10; i++){
+	for(var i = 0; i < 1; i++){
 		sim.entities.push(new basicObject("circle", [400+300*i, 500], [50], {initialVeloc: [0, 0],gravity:false, density:0.1, collisionFlash:"red"}));
 	}
 	sim.cameras[0] = new cameraConstructor(0, [0, 0], [0, 0], [1200, 600], {sizeMultiplier: 0.6});
