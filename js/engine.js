@@ -10,14 +10,47 @@ function engine(){
 	}
 	this.selection = []; //Used for mouse selecting. 
 	this.loop = function(){
-		for(var i = 0; i < this.entities.length; i++){
-			this.entities[i].clearForces();
+		var split = 1;
+		var splitSum = 0;
+		const maxNumSplit = 5;
+		const minSplit = 1/Math.pow(2, maxNumSplit);
+		tickImpatience = 1;
+		var count = 0;
+		do{
+			var lowestSplit = split;
+			var flag;
+			do{
+				count++;
+				if(count < 500){
+				flag = false;
+				for(var i = 0; i < this.entities.length; i++){
+					var s = this.entities[i].determineTickSplit(lowestSplit);
+					if(s < lowestSplit){
+						lowestSplit = s;
+						flag = true;
+					}
+				}
+			}
+			}
+			while(flag && lowestSplit > minSplit);
+			split = lowestSplit;
+			for(var i = 0; i < this.entities.length; i++){
+				this.entities[i].updatePos(split);
+			}
+			for(var i = 0; i < this.entities.length; i++){
+				this.entities[i].clearForces();
+			}
+			for(var i = 0; i < this.entities.length; i++){
+				this.entities[i].updateForces();
+			}
+			//TODO: Balls aren't properly reacting to each other. One ball gets infinitely close to the other (and a collision is detected), but the collision isn't driving them apart.
+			console.log(split)
+			splitSum += split;
+			split = 1-splitSum;
 		}
-		for(var i = 0; i < this.entities.length; i++){
-			this.entities[i].updateForces();
-		}
-		for(var i = 0; i < this.entities.length; i++){
-			this.entities[i].updatePos();
+		while(Math.abs(splitSum-1) > minSplit && split > minSplit);
+		if(splitSum != 1){
+			console.log("ERROR: Split Sum: " + splitSum)
 		}
 	}
 	this.drawLoop = function(){
@@ -222,10 +255,11 @@ function startEngine(){
 		sim.entities.push(new basicObject("block", [400+1000*i, 1100-s*100], [100+s*100, 100+s*100], {gravity:false,mass:Math.pow(10,2*i),initialVeloc:[-.0001,0],color:"gray"}));
 	}
 	*/
+
 	/*
 	//Circle Collision Test\\
 	sim.entities.push(new basicObject("circle", [100, 100], [90], {initialVeloc: [3, 2],gravity:true, density:0.1}));
-	sim.entities.push(new basicObject("circle", [500, 400], [50], {gravity:true, density:0.1}));
+	sim.entities.push(new basicObject("circle", [500, 400], [50], {initialVeloc: [1, 0],gravity:true, density:0.1}));
 	*/
 
 	/*
@@ -239,21 +273,26 @@ function startEngine(){
 	//sim.entities.push(new basicObject("block", [100, 150], [300, 10], {gravity:false, density:0.1, rAngle:0, interactable:true, rInitialVeloc:-5}));
 	*/
 
-	sim.entities.push(new basicObject("block", [600, 200], [50, 50], {gravity:false, initialVeloc:[10, 0], rAngle:1, rInitialVeloc:10,autoReturnColor:"black", collisionFlash:"red"}));
-	sim.entities.push(new basicObject("block", [1100, 400], [400, 50], {gravity:false, initialVeloc:[0, 0], rAngle:60, rInitialVeloc:0, autoReturnColor:"black", collisionFlash:"red"}));
+	// sim.entities.push(new basicObject("block", [600, 200], [50, 50], {gravity:false, initialVeloc:[10, 0], rAngle:1, rInitialVeloc:10,autoReturnColor:"black", collisionFlash:"red"}));
+	// sim.entities.push(new basicObject("block", [1100, 400], [400, 50], {gravity:false, initialVeloc:[0, 0], rAngle:60, rInitialVeloc:0, autoReturnColor:"black", collisionFlash:"red"}));
 	/*
 	//Basic Rotation Collision Test\\
 	sim.entities.push(new basicObject("block", [10, -5], [1, 1], {gravity:false, initialVeloc:[0, .2], rInitialVeloc: 1}))
 	sim.entities.push(new basicObject("block", [0, 0], [1, 1], {gravity:false, initialVeloc:[.35, 0], rAngle:0, rInitialVeloc:5, autoReturnColor:"black", collisionFlash:"red"}));
 	sim.cameras[0] = new cameraConstructor(0, [-30, -20], [0, 0], [1200, 600], {sizeMultiplier: 12});
 	*/
+	sim.entities.push(new basicObject("circle", [100, 500], [50], {initialVeloc: [49, 0],gravity:false, density:0.1, color:"red"}));
+	// sim.entities.push(new basicObject("circle", [400+300*0, 500], [50], {initialVeloc: [0, 0],gravity:false, density:0.1, color:"blue"}));
+	// sim.entities.push(new basicObject("circle", [400+300*1, 500], [50], {initialVeloc: [0, 0],gravity:false, density:0.1, color:"black"}));
+	for(var i = 0; i < 10; i++){
+		sim.entities.push(new basicObject("circle", [400+300*i, 500], [50], {initialVeloc: [0, 0],gravity:false, density:0.1, collisionFlash:"red"}));
+	}
 	sim.cameras[0] = new cameraConstructor(0, [0, 0], [0, 0], [1200, 600], {sizeMultiplier: 0.6});
-	
 
-
+	var loopTime = 20;
 	var updateLoop = setInterval(function loop(){
 		sim.loop();
-	}, 20);
+	}, loopTime);
 	requestAnimationFrame(drawLoop);
 	function drawLoop(){
 		cvs.ctx.clearRect(0, 0, cvs.width, cvs.height);
@@ -296,9 +335,9 @@ function startEngine(){
 				sim.paused = true;
 			}
 			else{
-				updateLoop = setInterval(function loop(){
+				updateLoop = setInterval(function loop(){ //TODO: Fix pausing
 					sim.loop();
-				}, 20);
+				}, loopTime);
 				sim.paused = false;
 			}
 		}

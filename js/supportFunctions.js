@@ -36,3 +36,12 @@ function findMag(v){
 function pythag(a, b){
 	return Math.sqrt(sqr(a)+sqr(b));
 }
+function lowestValueInArray(array){ //Returns the lowest value in the array
+	var low = array[0];
+	for(var i = 0; i < array.length; i++){
+		if(array[i] < low){
+			low = array[i];
+		}
+	}
+	return low;
+}
