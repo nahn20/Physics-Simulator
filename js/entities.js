@@ -220,6 +220,25 @@ function basicObject(type="block", pos=[0,0],dim=[10,10],options){
 						this.force[0].push(this.mass*(vxFinal-this.veloc[0]));
 						this.force[1].push(this.mass*(vyFinal-this.veloc[1]));
 						this.rTorque.push(this.rI*(vrFinal-this.rVeloc));
+						for(var i = 0; i < sim.entities.length; i++){ //!!Make sure this nudges when the two are detected for collision (see collision margin), not when intersecting. 
+							if(this != sim.entities[i]){ //This is incredibly unintelligent. TODO: Fix this and the other place you do this
+								var collisionReturns = isCollision(1, this, sim.entities[i]);
+								var count = 0;
+								while(collisionReturns.both){
+									var objiCenter = findCenterOf(sim.entities[i]);
+									var nudgeVector = normalizeVector([this.pos[0]-objiCenter[0], this.pos[1]-objiCenter[1]]); //!!should use center of this object -- assumes circle currently
+									console.log("nudgeVector " + nudgeVector)
+									nudgeVector[0] *= 10;
+									nudgeVector[1] *= 10;
+									this.pos = addVectors(this.pos, nudgeVector);
+									sim.entities[i].pos[0] -= nudgeVector[0];
+									sim.entities[i].pos[1] -= nudgeVector[1];
+									collisionReturns = isCollision(1, this, sim.entities[i]);
+									count++;
+									console.log("count: " + count)
+								}
+							}
+						}
 					}
 				}
 			}
@@ -257,18 +276,6 @@ function basicObject(type="block", pos=[0,0],dim=[10,10],options){
 			this.pos[0] += split*this.veloc[0];
 			this.pos[1] += split*this.veloc[1];
 			this.rAngle += split*this.rVeloc;
-		}
-		for(var i = 0; i < sim.entities.length; i++){
-			if(this != sim.entities[i]){ //This is incredibly unintelligent. TODO: Fix this and the other place you do this
-				var collisionReturns = isCollision(0, this, sim.entities[i]);
-				while(collisionReturns.both){
-					var objiCenter = findCenterOf(sim.entities[i]);
-					var nudgeVector = normalizeVector([this.pos[0]-objiCenter[0], this.pos[1]-objiCenter[1]]);
-					//TODO: Fix. This only happens for entity i=0 since it gets nudged and entity i=1 doesn't collide. 
-					this.pos = addVectors(this.pos, nudgeVector);
-					collisionReturns = isCollision(0, this, sim.entities[i]);
-				}
-			}
 		}
 	}
 	this.determineTickSplit = function(split){
@@ -506,7 +513,7 @@ function isRectRectCollision(whenCalculate, rect1, rect2){ //whenCalculate = 0 f
 			isCollision.both = true;
 		}
 	}
-	else{
+	else{ //Implement whenCalculate
 		//Variables for calculation
 		var sinAngle;
 		var cosAngle;
@@ -677,11 +684,11 @@ function isCircCircCollision(whenCalculate, circ1, circ2, maxMargin){
 		r : circ2.dim[0],
 	}
 	if(whenCalculate == 1){
-		c1.x += c1.veloc[0];
-		c1.y += c1.veloc[1];
+		c1.x += circ1.veloc[0];
+		c1.y += circ1.veloc[1];
 
-		c2.x += c2.veloc[0];
-		c2.y += c2.veloc[1];
+		c2.x += circ2.veloc[0];
+		c2.y += circ2.veloc[1];
 	}
 	var isCollision = {
 		both : false,

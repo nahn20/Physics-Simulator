@@ -12,16 +12,15 @@ function engine(){
 	this.loop = function(){
 		var split = 1;
 		var splitSum = 0;
-		const maxNumSplit = 5;
+		const maxNumSplit = 5; //Sets the maximum number of splits per tick
 		const minSplit = 1/Math.pow(2, maxNumSplit);
-		tickImpatience = 1;
 		var count = 0;
 		do{
 			var lowestSplit = split;
 			var flag;
-			do{
+			do{ //Looks for the lowest split requested of all the entities
 				count++;
-				if(count < 500){
+				if(count < 500){ //Exit condition
 					flag = false;
 					for(var i = 0; i < this.entities.length; i++){
 						var s = this.entities[i].determineTickSplit(lowestSplit);
@@ -44,7 +43,7 @@ function engine(){
 				this.entities[i].updateForces();
 			}
 			splitSum += split;
-			split = 1-splitSum;
+			split = 1-splitSum; //Sets split to remaining split time, then the lowest split will be found to replace it
 			console.log(split)
 		}
 		while(Math.abs(splitSum-1) > minSplit && split > minSplit);
