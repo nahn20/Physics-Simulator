@@ -1,4 +1,5 @@
 const gravity = 9.81/500; //Should be 50
+//
 function engine(){
 	this.time = 0;
 	this.entities = [];
