@@ -6,6 +6,7 @@ var cvs = {
 	init : function(){
 		this.canvas = document.getElementById("canvas");
 		this.ctx = this.canvas.getContext("2d");
+		this.ctx.imageSmoothingEnabled = false;
 		this.canvas.addEventListener("wheel", function(event){
 			event.preventDefault();
 			var canvasCoords = cvs.canvas.getBoundingClientRect();
@@ -44,42 +45,60 @@ var cvs = {
 			}
 		});
 		this.canvas.addEventListener("click", function(event){
+			ui.clickTrigger();
 			var canvasCoords = cvs.canvas.getBoundingClientRect();
 			var mouseX = event.x - canvasCoords.left;
 			var mouseY = event.y - canvasCoords.top;
-			for(var i = 0; i < sim.cameras.length; i++){
-				if(mouseX > sim.cameras[i].screenPos[0] && mouseX < sim.cameras[i].screenPos[0]+sim.cameras[i].dim[0] && mouseY > sim.cameras[i].screenPos[1] && mouseY < sim.cameras[i].screenPos[1]+sim.cameras[i].dim[1]){
-					var mouseOnCamX = mouseX - sim.cameras[i].screenPos[0];
-					var mouseOnCamY = mouseY - sim.cameras[i].screenPos[1];
-					var mouseInEngineX = mouseOnCamX/sim.cameras[i].sizeMultiplier + sim.cameras[i].pos[0];
-					var mouseInEngineY = mouseOnCamY/sim.cameras[i].sizeMultiplier + sim.cameras[i].pos[1];
-					console.log("X: " + mouseInEngineX + "\nY: " + mouseInEngineY);
-					var mouseEntity = {
-						pos : [mouseInEngineX, mouseInEngineY],
-						dim : [0,0],
-						rcom : [0, 0],
-						rAngle : 0,
-						type : "block",
-					}
-					for(var k = 0; k < sim.entities.length; k++){
-						if(isCollision(0, mouseEntity,sim.entities[k]).both == true){
-							console.log(sim.entities[k]);
-							if(sim.keyMap[49]){
-								if(sim.selection[0] == sim.entities[k]){
-									sim.selection[0] = null;
+			if(ui.hoveredElement == -1){ //Only does all this stuff if not hovering over the ui
+				for(var i = 0; i < sim.cameras.length; i++){
+					if(mouseX > sim.cameras[i].screenPos[0] && mouseX < sim.cameras[i].screenPos[0]+sim.cameras[i].dim[0] && mouseY > sim.cameras[i].screenPos[1] && mouseY < sim.cameras[i].screenPos[1]+sim.cameras[i].dim[1]){
+						var mouseOnCamX = mouseX - sim.cameras[i].screenPos[0];
+						var mouseOnCamY = mouseY - sim.cameras[i].screenPos[1];
+						var mouseInEngineX = mouseOnCamX/sim.cameras[i].sizeMultiplier + sim.cameras[i].pos[0];
+						var mouseInEngineY = mouseOnCamY/sim.cameras[i].sizeMultiplier + sim.cameras[i].pos[1];
+						console.log("X: " + mouseInEngineX + "\nY: " + mouseInEngineY);
+						var mouseEntity = {
+							pos : [mouseInEngineX, mouseInEngineY],
+							dim : [0,0],
+							rcom : [0, 0],
+							rAngle : 0,
+							type : "block",
+						}
+						for(var k = 0; k < sim.entities.length; k++){
+							if(isCollision(0, mouseEntity,sim.entities[k]).both == true){
+								console.log(sim.entities[k]);
+								if(sim.keyMap[49]){
+									if(sim.selection[0] == sim.entities[k]){
+										sim.selection[0] = null;
+									}
+									else{
+										sim.selection[0] = sim.entities[k];
+										if(sim.selection[0] == sim.selection[1]){
+											sim.selection[1] = null;
+										}
+									}
 								}
-								else{
-									sim.selection[0] = sim.entities[k];
+								if(sim.keyMap[50]){
+									if(sim.selection[1] == sim.entities[k]){
+										sim.selection[1] = null;
+									}
+									else{
+										sim.selection[1] = sim.entities[k];
+										if(sim.selection[0] == sim.selection[1]){
+											sim.selection[0] = null;
+										}
+									}
 								}
 							}
-							if(sim.keyMap[50]){
-								if(sim.selection[1] == sim.entities[k]){
-									sim.selection[1] = null;
-								}
-								else{
-									sim.selection[1] = sim.entities[k];
-								}
-							}
+						}
+						if(sim.selection[0] != null && sim.selection[1] != null){
+							ui.menu = 2;
+						}
+						else if(sim.selection[0] != null || sim.selection[1] != null){
+							ui.menu = 1;
+						}
+						else{
+							ui.menu = 0;
 						}
 					}
 				}

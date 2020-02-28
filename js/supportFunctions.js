@@ -36,35 +36,3 @@ function findMag(v){
 function pythag(a, b){
 	return Math.sqrt(sqr(a)+sqr(b));
 }
-function normalizeVector(vector){ //Takes in vector as array
-	var sum = 0;
-	for(var i = 0; i < vector.length; i++){
-		sum += vector[i]*vector[i];
-	}
-	var mag = Math.sqrt(sum);
-	for(var i = 0; i < vector.length; i++){
-		vector[i] /= mag;
-	}
-	return vector;
-}
-function addVectors(vA, vB){
-	var newVector = [];
-	if(vA.length != vB.length){
-		console.log("ERROR: addVectors(). Mismatch length.");
-	}
-	else{
-		for(var i = 0; i < vA.length; i++){
-			newVector[i] = vA[i] + vB[i];
-		}
-	}
-	return newVector;
-}
-function lowestValueInArray(array){ //Returns the lowest value in the array
-	var low = array[0];
-	for(var i = 0; i < array.length; i++){
-		if(array[i] < low){
-			low = array[i];
-		}
-	}
-	return low;
-}

@@ -21,7 +21,7 @@ function basicObject(type="block", pos=[0,0],dim=[10,10],options){
 	this.interactable = true;
 	this.color = "black";
 	this.autoReturnColor = false; //Color the object returns to after every draw cycle. 
-	this.collisionFlash = false; //Define this with a color
+	this.collisionFlash = false;
 	this.fill = true;
 	this.sticky = false;
 	this.energyLossCoefficient = 1;
@@ -138,9 +138,6 @@ function basicObject(type="block", pos=[0,0],dim=[10,10],options){
 					this.force[1].push(-force);
 				} //Redo the structure below: It runs all the checks
 				else if(collisionReturns.both){
-					if(collisionReturns.margin < 0){
-						//console.log("Split Error: Margin " + collisionReturns.margin);
-					}
 					if(this.collisionFlash != false){
 						this.color = this.collisionFlash;
 					}
@@ -216,29 +213,10 @@ function basicObject(type="block", pos=[0,0],dim=[10,10],options){
 						else if(sim.entities[i].infiniteI){
 							vrFinal = -this.rVeloc;
 						}
-						//console.log(this.color + "'s\nDelta V: " + (vxFinal-this.veloc[0])+ "\nPos: " + this.pos[0]);
+
 						this.force[0].push(this.mass*(vxFinal-this.veloc[0]));
 						this.force[1].push(this.mass*(vyFinal-this.veloc[1]));
-						this.rTorque.push(this.rI*(vrFinal-this.rVeloc));
-						for(var i = 0; i < sim.entities.length; i++){ //!!Make sure this nudges when the two are detected for collision (see collision margin), not when intersecting. 
-							if(this != sim.entities[i]){ //This is incredibly unintelligent. TODO: Fix this and the other place you do this
-								var collisionReturns = isCollision(1, this, sim.entities[i]);
-								var count = 0;
-								while(collisionReturns.both){
-									var objiCenter = findCenterOf(sim.entities[i]);
-									var nudgeVector = normalizeVector([this.pos[0]-objiCenter[0], this.pos[1]-objiCenter[1]]); //!!should use center of this object -- assumes circle currently
-									console.log("nudgeVector " + nudgeVector)
-									nudgeVector[0] *= 10;
-									nudgeVector[1] *= 10;
-									this.pos = addVectors(this.pos, nudgeVector);
-									sim.entities[i].pos[0] -= nudgeVector[0];
-									sim.entities[i].pos[1] -= nudgeVector[1];
-									collisionReturns = isCollision(1, this, sim.entities[i]);
-									count++;
-									console.log("count: " + count)
-								}
-							}
-						}
+						//this.rTorque.push(this.rI*(vrFinal-this.rVeloc));
 					}
 				}
 			}
@@ -256,11 +234,22 @@ function basicObject(type="block", pos=[0,0],dim=[10,10],options){
 		}
 		var velocFinal = (coefficient*Math.sqrt(blob)-(d/(2*Math.sqrt(c))))/Math.sqrt(c);
 
+		//Elastic but Wack\\
+		// var c = a.m*a.v+b.m*b.v;
+		// var d = a.m*a.m+a.m*b.m;
+		// var e = -2*c*a.m;
+		// var coefficient = 1;
+		// if(b.v-a.v < 0){
+		// 	coefficient = -1;
+		// }
+		// var velocFinal = (coefficient*Math.sqrt(a.m*b.m*a.v*a.v+b.m*b.m*b.v*b.v-c*c+e*e/(4*d))-e/(2*Math.sqrt(d)))/Math.sqrt(d);
+
 		//ELASTIC VERSION\\
 		//var velocFinal = a.v*(a.m-b.m)/(a.m+b.m)+2*b.v*b.m/(a.m+b.m);
+		
 		return velocFinal;
 	}
-	this.updatePos = function(split){
+	this.updatePos = function(){
 		if(!this.infiniteMass){
 			this.accel[0] = sumArray(this.force[0]) / this.mass;
 			this.accel[1] = sumArray(this.force[1]) / this.mass;
@@ -269,71 +258,15 @@ function basicObject(type="block", pos=[0,0],dim=[10,10],options){
 			this.rAccel = sumArray(this.rTorque) / this.rI;
 		}
 		//STANDARD
-		this.veloc[0] += split*this.accel[0];
-		this.veloc[1] += split*this.accel[1];
-		this.rVeloc += split*this.rAccel;
+		this.veloc[0] += this.accel[0];
+		this.veloc[1] += this.accel[1];
+		this.rVeloc += this.rAccel;
 		if(!this.updatePosOverride){
-			this.pos[0] += split*this.veloc[0];
-			this.pos[1] += split*this.veloc[1];
-			this.rAngle += split*this.rVeloc;
+			this.pos[0] += this.veloc[0];
+			this.pos[1] += this.veloc[1];
+			this.rAngle += this.rVeloc;
+
 		}
-	}
-	this.determineTickSplit = function(split){
-		const collisionSplitAmount = 1/2; //Splits time by this amount when there's a collision
-		function velocFlipCheck(veloc, accel, split){
-			var newVeloc = veloc + split*accel;
-			if((veloc > 0 && newVeloc < 0) || (veloc < 0 && newVeloc > 0)){
-				console.log("Split By Veloc")
-				if(Math.abs(veloc/accel) > split){
-					console.log("ERROR LOOK HERE ASDF")
-				}
-				return Math.abs(veloc/accel);
-			}
-			return 1;
-		}
-		var splitAmount = [1, 1, 1]; //1 means doesn't need split
-		splitAmount[0] = velocFlipCheck(this.veloc[0], this.accel[0], split);
-		splitAmount[1] = velocFlipCheck(this.veloc[1], this.accel[1], split);
-		splitAmount[2] = velocFlipCheck(this.rVeloc, this.rAccel, split);
-		var lowestSplit = lowestValueInArray(splitAmount);
-		function modelPos(entity, k, s){ //1 for adding, -1 for undoing
-			if(k == 1){
-				entity.veloc[0] += s*entity.accel[0];
-				entity.veloc[1] += s*entity.accel[1];
-				entity.rVeloc += s*entity.rAccel;
-				if(!entity.updatePosOverride){
-					entity.pos[0] += s*entity.veloc[0];
-					entity.pos[1] += s*entity.veloc[1];
-					entity.rAngle += s*entity.rVeloc;
-				}
-			}
-			if(k == -1){
-				if(!entity.updatePosOverride){
-					entity.pos[0] -= s*entity.veloc[0];
-					entity.pos[1] -= s*entity.veloc[1];
-					entity.rAngle -= s*entity.rVeloc;
-				}	
-				entity.veloc[0] -= s*entity.accel[0];
-				entity.veloc[1] -= s*entity.accel[1];
-				entity.rVeloc -= s*entity.rAccel;
-			}
-		}
-		modelPos(this, 1, split);
-		for(var i = 0; i < sim.entities.length; i++){
-			if(sim.entities[i] != this && sim.entities[i].interactable == true){
-				modelPos(sim.entities[i], 1, split);
-				var collisionReturns = isCollision(0, this, sim.entities[i]);
-				modelPos(sim.entities[i], -1, split);
-				if(collisionReturns.margin < 0){
-					modelPos(this, -1, split);
-					return collisionSplitAmount*split;
-				}
-			}
-		}
-		if(lowestSplit != 1){
-		}
-		modelPos(this, -1, split);
-		return lowestSplit;
 	}
 }
 function spring(supportBlock,angle=90,equilibrium=100,otherDim=30,k=30, options){
@@ -428,46 +361,30 @@ function spring(supportBlock,angle=90,equilibrium=100,otherDim=30,k=30, options)
 		}
 	}
 }
-function findCenterOf(obj){ //Returns as [x, y] the approximate center coords of the shape
-	if(obj.type == "rect"){
-		if(typeof(rect1.rAngle) != 'undefined' || rect1.rAngle % 180 == 0){ //standard rect
-			return [obj.pos[0]+obj.dim[0]/2, obj.pos[1]+obj.dim[1]/2];
-		}
-		else{
-			console.log("ERROR: findCenterOf(). You didn't code this yet")
-		}
-	}
-	if(obj.type == "circle"){
-		return obj.pos;
-	}
-	console.log("ERROR: findCenterOf(). Shape not found: " + obj.shape)
-}
 function isCollision(whenCalculate, obj1, obj2){
-	var maxMargin = 0.1;
 	if(obj1.type == "block" || obj1.type == "spring"){
 		if(obj2.type == "block" || obj2.type == "spring"){
 			return isRectRectCollision(whenCalculate, obj1, obj2);
 		}
 		if(obj2.type == "circle"){
-			return isCircRectCollision(whenCalculate, obj2, obj1, maxMargin);
+			return isCircRectCollision(whenCalculate, obj2, obj1);
 		}
 	}
 	if(obj1.type == "circle"){
 		if(obj2.type == "block" || obj2.type == "spring"){
-			isCircRectCollision(whenCalculate, obj1, obj2, maxMargin);
+			return isCircRectCollision(whenCalculate, obj1, obj2);
 		}
 		if(obj2.type == "circle"){
-			return isCircCircCollision(whenCalculate, obj2, obj1, maxMargin);
+			return isCircCircCollision(whenCalculate, obj2, obj1);
 		}
 	}
 }
-function isRectRectCollision(whenCalculate, rect1, rect2){ //whenCalculate = 0 for present, 1 for future. //TODO: Add Margin to rectrect Collisions
+function isRectRectCollision(whenCalculate, rect1, rect2){ //whenCalculate = 0 for present, 1 for future
 	var isCollision = {
 		x : false,
 		y : false,
 		both : false,
 		collisionCoords : [],
-		margin : null,
 	}
 	var angleCheck = {
 		a1 : 0, 
@@ -513,7 +430,7 @@ function isRectRectCollision(whenCalculate, rect1, rect2){ //whenCalculate = 0 f
 			isCollision.both = true;
 		}
 	}
-	else{ //Implement whenCalculate
+	else{
 		//Variables for calculation
 		var sinAngle;
 		var cosAngle;
@@ -627,7 +544,7 @@ function isRectRectCollision(whenCalculate, rect1, rect2){ //whenCalculate = 0 f
 	}
 	return isCollision;
 }
-function isCircRectCollision(whenCalculate, circ, rect, maxMargin){
+function isCircRectCollision(whenCalculate, circ, rect){
 	var c = {
 		x : circ.pos[0],
 		y : circ.pos[1],
@@ -651,7 +568,6 @@ function isCircRectCollision(whenCalculate, circ, rect, maxMargin){
 	var isCollision = {
 		both : false,
 		collisionCoords : [],
-		margin : null,
 	}
 	var nearestX = Math.max(r.x1, Math.min(c.x, r.x2)); //Working
 	var nearestY = Math.max(r.y1, Math.min(c.y, r.y2));
@@ -662,8 +578,7 @@ function isCircRectCollision(whenCalculate, circ, rect, maxMargin){
 	// 	type : "circle"
 	// }
 	// toDraw.push(point)
-	isCollision.margin = Math.sqrt(Math.pow(nearestX-c.x, 2) + Math.pow(nearestY-c.y, 2)) - c.r;
-	if(isCollision.margin < maxMargin){
+	if(Math.sqrt(Math.pow(nearestX-c.x, 2) + Math.pow(nearestY-c.y, 2)) < c.r){
 		isCollision.collisionCoords = [nearestX, nearestY];
 		isCollision.both = true;
 	}
@@ -672,7 +587,7 @@ function isCircRectCollision(whenCalculate, circ, rect, maxMargin){
 	}
 	return isCollision;
 }
-function isCircCircCollision(whenCalculate, circ1, circ2, maxMargin){
+function isCircCircCollision(whenCalculate, circ1, circ2){
 	var c1 = {
 		x : circ1.pos[0],
 		y : circ1.pos[1],
@@ -684,20 +599,18 @@ function isCircCircCollision(whenCalculate, circ1, circ2, maxMargin){
 		r : circ2.dim[0],
 	}
 	if(whenCalculate == 1){
-		c1.x += circ1.veloc[0];
-		c1.y += circ1.veloc[1];
+		c1.x += c1.veloc[0];
+		c1.y += c1.veloc[1];
 
-		c2.x += circ2.veloc[0];
-		c2.y += circ2.veloc[1];
+		c2.x += c2.veloc[0];
+		c2.y += c2.veloc[1];
 	}
 	var isCollision = {
 		both : false,
 		collisionCoords : [],
-		margin : null,
 	}
 	var distance = Math.sqrt(Math.pow(c1.x-c2.x, 2) + Math.pow(c1.y-c2.y, 2));
-	isCollision.margin = distance - c1.r - c2.r;
-	if(isCollision.margin < maxMargin){
+	if(distance < c1.r + c2.r){
 		isCollision.both = true;
 		isCollision.collisionCoords = [c1.x+(c1.r/distance)*(c2.x-c1.x), c1.y+(c1.r/distance)*(c2.y-c1.y)];
 	}

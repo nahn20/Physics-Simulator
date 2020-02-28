@@ -1,5 +1,4 @@
-const gravity = 9.81/500; //Should be 50
-//
+const gravity = 9.81/50; //Should be 50
 function engine(){
 	this.time = 0;
 	this.entities = [];
@@ -11,45 +10,14 @@ function engine(){
 	}
 	this.selection = []; //Used for mouse selecting. 
 	this.loop = function(){
-		var split = 1;
-		var splitSum = 0;
-		const maxNumSplit = 5; //Sets the maximum number of splits per tick
-		const minSplit = 1/Math.pow(2, maxNumSplit);
-		var count = 0;
-		do{
-			var lowestSplit = split;
-			var flag;
-			do{ //Looks for the lowest split requested of all the entities
-				count++;
-				if(count < 500){ //Exit condition
-					flag = false;
-					for(var i = 0; i < this.entities.length; i++){
-						var s = this.entities[i].determineTickSplit(lowestSplit);
-						if(s < lowestSplit){
-							lowestSplit = s;
-							flag = true;
-						}
-					}
-				}
-			}
-			while(flag && lowestSplit > minSplit);
-			split = lowestSplit;
-			for(var i = 0; i < this.entities.length; i++){
-				this.entities[i].updatePos(split);
-			}
-			for(var i = 0; i < this.entities.length; i++){
-				this.entities[i].clearForces();
-			}
-			for(var i = 0; i < this.entities.length; i++){
-				this.entities[i].updateForces();
-			}
-			splitSum += split;
-			split = 1-splitSum; //Sets split to remaining split time, then the lowest split will be found to replace it
-			console.log(split)
+		for(var i = 0; i < this.entities.length; i++){
+			this.entities[i].clearForces();
 		}
-		while(Math.abs(splitSum-1) > minSplit && split > minSplit);
-		if(splitSum != 1){
-			console.log("ERROR: Split Sum: " + splitSum)
+		for(var i = 0; i < this.entities.length; i++){
+			this.entities[i].updateForces();
+		}
+		for(var i = 0; i < this.entities.length; i++){
+			this.entities[i].updatePos();
 		}
 	}
 	this.drawLoop = function(){
@@ -65,8 +33,76 @@ function userInterface(){
 	this.mouseDown = false;
 	this.selectionCoordsA = [0, 0];
 	this.selectionCoordsB = [0, 0];
+	this.menu = 0; //0 is default, 1 is selected
+	this.menuPos = [8, 8];
+	this.iconDimensions = [32, 32];
+	this.margin = 8;
+	this.hoveredElement = -1; //Element that is currently being hovered over
+	this.fillStyle = "rgba(0, 0, 0, 0.2)";
+	this.drawImage = function(x, y, dim, source){
+		var image = new Image();
+		image.src = source;
+		cvs.ctx.drawImage(image, x, y, dim[0], dim[1]);
+	}
 	this.drawUI = function(){
+		this.drawMenu();
 		this.drawMouse();
+	}
+	this.drawMenu = function(){
+		var sourceArray = [];
+		if(this.menu == 0){ //Regular menu
+			sourceArray = ["images/icons/block.png", "images/icons/circle.png", "images/icons/x.png", "images/icons/circle2.png", "images/icons/circle3.png"]
+		}
+		if(this.menu == 1){ //Menu for having 1 selected
+			sourceArray = ["images/icons/x.png"];
+		}
+		if(this.menu == 2){
+			sourceArray = ["images/icons/circle3.png"];
+		}
+
+		function hasDropdown(hoveredElement){ //Returns true if there's a dropdown for that element
+			var elementsWithDropdown = [0, 1]
+			for(var i = 0; i < elementsWithDropdown.length; i++){
+				if(hoveredElement == elementsWithDropdown[i] || hoveredElement == elementsWithDropdown[i]+1000){
+					return true;
+				}
+			}
+			return false;
+		}
+
+		var isHovering = false;
+		var sideMenuDim = [100, 100];
+		if(this.mousePos[0] > this.menuPos[0]-this.margin/2 && this.mousePos[0] < this.menuPos[0]+this.iconDimensions[0]+this.margin/2){ //Possibly over the menu
+			for(var i = 0; i < sourceArray.length; i++){
+				if(this.mousePos[1] > this.menuPos[1]-this.margin/2+(this.iconDimensions[1]+this.margin)*i && this.mousePos[1] <= this.menuPos[1]-this.margin/2+(this.iconDimensions[1]+this.margin)*(i+1)){
+					this.hoveredElement = i+this.menu*100;
+					isHovering = true;
+					cvs.ctx.fillStyle = this.fillStyle;
+					cvs.ctx.fillRect(this.menuPos[0]-this.margin/2, (this.iconDimensions[1]+this.margin)*i+this.menuPos[1]-this.margin/2, this.iconDimensions[0]+this.margin, this.iconDimensions[1]+this.margin);
+				}
+			}
+		}
+		else if(this.hoveredElement != -1){ //Maybe more efficient to split? Else if because we only care if mouse is outside of x bounds in a certain way
+			if(hasDropdown(this.hoveredElement)){
+				if(this.mousePos[0] > this.menuPos[0]-this.margin/2 && this.mousePos[0] < this.menuPos[0]+this.iconDimensions[0]+this.margin/2+sideMenuDim[0]){ //x
+					if(this.mousePos[1] > this.menuPos[1]-this.margin/2+(this.iconDimensions[1]+this.margin)*(this.hoveredElement%100) && this.mousePos[1] < this.menuPos[1]-this.margin/2+(this.iconDimensions[1]+this.margin)*(this.hoveredElement%100)+sideMenuDim[1]){ //y
+						//Draws the rectangle for the main element on the left
+						cvs.ctx.fillRect(this.menuPos[0]-this.margin/2, (this.iconDimensions[1]+this.margin)*(this.hoveredElement%100)+this.menuPos[1]-this.margin/2, this.iconDimensions[0]+this.margin, this.iconDimensions[1]+this.margin);
+						isHovering = true;
+					}
+				}
+			}
+		}
+		if(!isHovering){
+			this.hoveredElement = -1;
+		}
+		if(hasDropdown(this.hoveredElement)){ //ex: 101 for menu 1, 2nd item
+			cvs.ctx.fillStyle = this.fillStyle;
+			cvs.ctx.fillRect(this.menuPos[0]+this.iconDimensions[0]+this.margin/2, (this.iconDimensions[1]+this.margin)*(this.hoveredElement%100)+this.menuPos[1]-this.margin/2, sideMenuDim[0], sideMenuDim[1]);
+		}
+		for(var i = 0; i < sourceArray.length; i++){ //Draws images
+			ui.drawImage(this.menuPos[0], this.menuPos[1]+i*(this.iconDimensions[1]+this.margin), this.iconDimensions, sourceArray[i]);
+		}
 	}
 	this.drawMouse = function(){
 		if(this.selectionType == "block"){
@@ -99,6 +135,15 @@ function userInterface(){
                 cvs.ctx.arc(this.mousePos[0]-10.5, this.mousePos[1]+19.5, 5, 0, 2*Math.PI);
                 cvs.ctx.stroke();
 			}
+		}
+	}
+	this.clickTrigger = function(){
+		//Deals with menu selection
+		if(this.hoveredElement == 0){
+			ui.selectionType = "block";
+		}
+		if(this.hoveredElement == 1){
+			ui.selectionType = "circle";
 		}
 	}
 	this.mouseUpTrigger = function(){
@@ -254,11 +299,10 @@ function startEngine(){
 		sim.entities.push(new basicObject("block", [400+1000*i, 1100-s*100], [100+s*100, 100+s*100], {gravity:false,mass:Math.pow(10,2*i),initialVeloc:[-.0001,0],color:"gray"}));
 	}
 	*/
-
 	/*
 	//Circle Collision Test\\
 	sim.entities.push(new basicObject("circle", [100, 100], [90], {initialVeloc: [3, 2],gravity:true, density:0.1}));
-	sim.entities.push(new basicObject("circle", [500, 400], [50], {initialVeloc: [1, 0],gravity:true, density:0.1}));
+	sim.entities.push(new basicObject("circle", [500, 400], [50], {gravity:true, density:0.1}));
 	*/
 
 	/*
@@ -272,26 +316,17 @@ function startEngine(){
 	//sim.entities.push(new basicObject("block", [100, 150], [300, 10], {gravity:false, density:0.1, rAngle:0, interactable:true, rInitialVeloc:-5}));
 	*/
 
-	// sim.entities.push(new basicObject("block", [600, 200], [50, 50], {gravity:false, initialVeloc:[10, 0], rAngle:1, rInitialVeloc:10,autoReturnColor:"black", collisionFlash:"red"}));
-	// sim.entities.push(new basicObject("block", [1100, 400], [400, 50], {gravity:false, initialVeloc:[0, 0], rAngle:60, rInitialVeloc:0, autoReturnColor:"black", collisionFlash:"red"}));
-	/*
-	//Basic Rotation Collision Test\\
-	sim.entities.push(new basicObject("block", [10, -5], [1, 1], {gravity:false, initialVeloc:[0, .2], rInitialVeloc: 1}))
-	sim.entities.push(new basicObject("block", [0, 0], [1, 1], {gravity:false, initialVeloc:[.35, 0], rAngle:0, rInitialVeloc:5, autoReturnColor:"black", collisionFlash:"red"}));
-	sim.cameras[0] = new cameraConstructor(0, [-30, -20], [0, 0], [1200, 600], {sizeMultiplier: 12});
-	*/
-	sim.entities.push(new basicObject("circle", [100, 500], [50], {initialVeloc: [49, 0],gravity:false, density:0.1, color:"red"}));
-	// sim.entities.push(new basicObject("circle", [400+300*0, 500], [50], {initialVeloc: [0, 0],gravity:false, density:0.1, color:"blue"}));
-	// sim.entities.push(new basicObject("circle", [400+300*1, 500], [50], {initialVeloc: [0, 0],gravity:false, density:0.1, color:"black"}));
-	for(var i = 0; i < 1; i++){
-		sim.entities.push(new basicObject("circle", [400+300*i, 500], [50], {initialVeloc: [0, 0],gravity:false, density:0.1, collisionFlash:"red"}));
-	}
+	sim.entities.push(new basicObject("block", [500, 200], [50, 50], {gravity:true, initialVeloc:[10, 0], gravity:false, autoReturnColor:"black", collisionFlash:"red"}));
+	sim.entities.push(new basicObject("block", [800, 200], [50, 50], {gravity:false, initialVeloc:[0, 0], autoReturnColor:"black", collisionFlash:"red"}));
+	sim.entities.push(new basicObject("block", [1500, 0], [50, 1000], {infiniteMass: true, gravity:false, initialVeloc:[0, 0], autoReturnColor:"black", collisionFlash:"red"}));
+	sim.entities.push(new basicObject("block", [300, 0], [50, 1000], {infiniteMass: true, gravity:false, initialVeloc:[0, 0], autoReturnColor:"black", collisionFlash:"red"}));
+	//sim.entities.push(new basicObject("block", [200, 200], [50, 50], {gravity:false, initialVeloc:[0, 0], mass:999999, autoReturnColor:"black", collisionFlash:"red"}));
 	sim.cameras[0] = new cameraConstructor(0, [0, 0], [0, 0], [1200, 600], {sizeMultiplier: 0.6});
 
-	var loopTime = 20;
+
 	var updateLoop = setInterval(function loop(){
 		sim.loop();
-	}, loopTime);
+	}, 20);
 	requestAnimationFrame(drawLoop);
 	function drawLoop(){
 		cvs.ctx.clearRect(0, 0, cvs.width, cvs.height);
@@ -334,9 +369,9 @@ function startEngine(){
 				sim.paused = true;
 			}
 			else{
-				updateLoop = setInterval(function loop(){ //TODO: Fix pausing
+				updateLoop = setInterval(function loop(){
 					sim.loop();
-				}, loopTime);
+				}, 20);
 				sim.paused = false;
 			}
 		}
