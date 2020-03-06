@@ -67,34 +67,34 @@ var cvs = {
 						for(var k = 0; k < sim.entities.length; k++){
 							if(isCollision(0, mouseEntity,sim.entities[k]).both == true){
 								console.log(sim.entities[k]);
-								if(sim.keyMap[49]){
-									if(sim.selection[0] == sim.entities[k]){
-										sim.selection[0] = null;
-									}
-									else{
-										sim.selection[0] = sim.entities[k];
-										if(sim.selection[0] == sim.selection[1]){
-											sim.selection[1] = null;
+								for(var key = 49; key <= 57; key++){
+									if(sim.keyMap[key]){
+										if(sim.selection[key-49] == k){
+											sim.selection[key-49] = null;
 										}
-									}
-								}
-								if(sim.keyMap[50]){
-									if(sim.selection[1] == sim.entities[k]){
-										sim.selection[1] = null;
-									}
-									else{
-										sim.selection[1] = sim.entities[k];
-										if(sim.selection[0] == sim.selection[1]){
-											sim.selection[0] = null;
+										else{
+											sim.selection[key-49] = k;
+											for(var j = 0; j <= 9; j++){ //Checks to see if any other selections are the same key
+												if(sim.selection[key-49] == sim.selection[j] && key-49 != j){
+													sim.selection[j] = null;
+												}
+											}
 										}
 									}
 								}
 							}
 						}
-						if(sim.selection[0] != null && sim.selection[1] != null){
+						//If multiple selected
+						var selectedCount = 0;
+						for(var i = 0; i < sim.selection.length && selectedCount < 2; i++){
+							if(sim.selection[i] != null){
+								selectedCount++;
+							}
+						}
+						if(selectedCount >= 2){
 							ui.menu = 2;
 						}
-						else if(sim.selection[0] != null || sim.selection[1] != null){
+						else if(selectedCount == 1){
 							ui.menu = 1;
 						}
 						else{

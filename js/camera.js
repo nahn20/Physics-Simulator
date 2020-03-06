@@ -74,9 +74,9 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
 		for(var i = 0; i < sim.selection.length; i++){ //Drawing borders for selection tool
 			if(sim.selection[i] != null){
 				var copy = {
-					pos : [sim.selection[i].pos[0], sim.selection[i].pos[1]], //Copy, not reference
-					dim : [sim.selection[i].dim[0], sim.selection[i].dim[1]], //Copy, not reference
-					type : sim.selection[i].type,
+					pos : [sim.entities[sim.selection[i]].pos[0], sim.entities[sim.selection[i]].pos[1]], //Copy, not reference
+					dim : [sim.entities[sim.selection[i]].dim[0], sim.entities[sim.selection[i]].dim[1]], //Copy, not reference
+					type : sim.entities[sim.selection[i]].type,
 					lineWidth : 4,
 					color : "black",
 					fill : false,
@@ -85,12 +85,8 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
 				copy.pos[1] += copy.lineWidth;
 				copy.dim[0] -= 2*copy.lineWidth;
 				copy.dim[1] -= 2*copy.lineWidth;
-				if(i == 0){
-					copy.color = "blue";
-				}
-				if(i == 1){
-					copy.color = "red";
-				}
+				var colorIndex = ["blue", "red", "green", "yellow", "purple", "pink", "teal", "orange", "#D2B4DE"];
+				copy.color = colorIndex[i];
 				caseDraw(copy, this);
 			}
 		}

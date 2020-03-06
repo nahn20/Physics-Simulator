@@ -9,6 +9,9 @@ function engine(){
 		this.keyMap[i] = false;
 	}
 	this.selection = []; //Used for mouse selecting. 
+	for(var i = 0; i < 10; i++){
+		this.selection[i] = null;
+	}
 	this.loop = function(){
 		for(var i = 0; i < this.entities.length; i++){
 			this.entities[i].clearForces();
@@ -23,187 +26,6 @@ function engine(){
 	this.drawLoop = function(){
 		for(var i = 0; i < this.cameras.length; i++){
 			this.cameras[i].drawAll();
-		}
-	}
-}
-function userInterface(){
-	this.toDraw = [];
-	this.selectionType = "none";
-	this.mousePos = [0, 0];
-	this.mouseDown = false;
-	this.selectionCoordsA = [0, 0];
-	this.selectionCoordsB = [0, 0];
-	this.menu = 0; //0 is default, 1 is selected
-	this.menuPos = [8, 8];
-	this.iconDimensions = [32, 32];
-	this.margin = 8;
-	this.hoveredElement = -1; //Element that is currently being hovered over
-	this.fillStyle = "rgba(0, 0, 0, 0.2)";
-	this.drawImage = function(x, y, dim, source){
-		var image = new Image();
-		image.src = source;
-		cvs.ctx.drawImage(image, x, y, dim[0], dim[1]);
-	}
-	this.drawUI = function(){
-		this.drawMenu();
-		this.drawMouse();
-	}
-	this.drawMenu = function(){
-		var sourceArray = [];
-		if(this.menu == 0){ //Regular menu
-			sourceArray = ["images/icons/block.png", "images/icons/circle.png", "images/icons/x.png", "images/icons/circle2.png", "images/icons/circle3.png"]
-		}
-		if(this.menu == 1){ //Menu for having 1 selected
-			sourceArray = ["images/icons/x.png"];
-		}
-		if(this.menu == 2){
-			sourceArray = ["images/icons/circle3.png"];
-		}
-
-		function hasDropdown(hoveredElement){ //Returns true if there's a dropdown for that element
-			var elementsWithDropdown = [0, 1]
-			for(var i = 0; i < elementsWithDropdown.length; i++){
-				if(hoveredElement == elementsWithDropdown[i] || hoveredElement == elementsWithDropdown[i]+1000){
-					return true;
-				}
-			}
-			return false;
-		}
-
-		var isHovering = false;
-		var sideMenuDim = [100, 100];
-		if(this.mousePos[0] > this.menuPos[0]-this.margin/2 && this.mousePos[0] < this.menuPos[0]+this.iconDimensions[0]+this.margin/2){ //Possibly over the menu
-			for(var i = 0; i < sourceArray.length; i++){
-				if(this.mousePos[1] > this.menuPos[1]-this.margin/2+(this.iconDimensions[1]+this.margin)*i && this.mousePos[1] <= this.menuPos[1]-this.margin/2+(this.iconDimensions[1]+this.margin)*(i+1)){
-					this.hoveredElement = i+this.menu*100;
-					isHovering = true;
-					cvs.ctx.fillStyle = this.fillStyle;
-					cvs.ctx.fillRect(this.menuPos[0]-this.margin/2, (this.iconDimensions[1]+this.margin)*i+this.menuPos[1]-this.margin/2, this.iconDimensions[0]+this.margin, this.iconDimensions[1]+this.margin);
-				}
-			}
-		}
-		else if(this.hoveredElement != -1){ //Maybe more efficient to split? Else if because we only care if mouse is outside of x bounds in a certain way
-			if(hasDropdown(this.hoveredElement)){
-				if(this.mousePos[0] > this.menuPos[0]-this.margin/2 && this.mousePos[0] < this.menuPos[0]+this.iconDimensions[0]+this.margin/2+sideMenuDim[0]){ //x
-					if(this.mousePos[1] > this.menuPos[1]-this.margin/2+(this.iconDimensions[1]+this.margin)*(this.hoveredElement%100) && this.mousePos[1] < this.menuPos[1]-this.margin/2+(this.iconDimensions[1]+this.margin)*(this.hoveredElement%100)+sideMenuDim[1]){ //y
-						//Draws the rectangle for the main element on the left
-						cvs.ctx.fillRect(this.menuPos[0]-this.margin/2, (this.iconDimensions[1]+this.margin)*(this.hoveredElement%100)+this.menuPos[1]-this.margin/2, this.iconDimensions[0]+this.margin, this.iconDimensions[1]+this.margin);
-						isHovering = true;
-					}
-				}
-			}
-		}
-		if(!isHovering){
-			this.hoveredElement = -1;
-		}
-		if(hasDropdown(this.hoveredElement)){ //ex: 101 for menu 1, 2nd item
-			cvs.ctx.fillStyle = this.fillStyle;
-			cvs.ctx.fillRect(this.menuPos[0]+this.iconDimensions[0]+this.margin/2, (this.iconDimensions[1]+this.margin)*(this.hoveredElement%100)+this.menuPos[1]-this.margin/2, sideMenuDim[0], sideMenuDim[1]);
-		}
-		for(var i = 0; i < sourceArray.length; i++){ //Draws images
-			ui.drawImage(this.menuPos[0], this.menuPos[1]+i*(this.iconDimensions[1]+this.margin), this.iconDimensions, sourceArray[i]);
-		}
-	}
-	this.drawMouse = function(){
-		if(this.selectionType == "block"){
-			if(this.mouseDown){ //Draws large rect while holding
-				cvs.ctx.beginPath();
-				cvs.ctx.strokeStyle = "black";
-				cvs.ctx.lineWidth = 1;
-				cvs.ctx.rect(this.selectionCoordsA[0], this.selectionCoordsA[1], this.mousePos[0]-this.selectionCoordsA[0], this.mousePos[1]-this.selectionCoordsA[1]);
-				cvs.ctx.stroke();
-			}
-			else{ //Draw tiny cursor rect otherwise
-				cvs.ctx.beginPath();
-				cvs.ctx.strokeStyle = "black";
-				cvs.ctx.lineWidth = 1;
-				cvs.ctx.rect(this.mousePos[0]-15, this.mousePos[1]+15, 10, 10);
-				cvs.ctx.stroke();
-			}
-		}
-		if(this.selectionType == "circle"){
-			if(this.mouseDown){ //Big draggy circle
-				var radius = Math.sqrt(Math.pow(this.selectionCoordsA[0]-this.mousePos[0], 2) + Math.pow(this.selectionCoordsA[1]-this.mousePos[1], 2));
-                cvs.ctx.beginPath();
-                cvs.ctx.strokeStyle="black";
-                cvs.ctx.arc(this.selectionCoordsA[0], this.selectionCoordsA[1], radius, 0, 2*Math.PI);
-                cvs.ctx.stroke();
-			}
-			else{
-                cvs.ctx.beginPath();
-                cvs.ctx.strokeStyle="black";
-                cvs.ctx.arc(this.mousePos[0]-10.5, this.mousePos[1]+19.5, 5, 0, 2*Math.PI);
-                cvs.ctx.stroke();
-			}
-		}
-	}
-	this.clickTrigger = function(){
-		//Deals with menu selection
-		if(this.hoveredElement == 0){
-			ui.selectionType = "block";
-		}
-		if(this.hoveredElement == 1){
-			ui.selectionType = "circle";
-		}
-	}
-	this.mouseUpTrigger = function(){
-		var selectionInEngineA;
-		var selectionInEngineB;
-		for(var i = 0; i < sim.cameras.length; i++){
-			if(this.selectionCoordsA[0] > sim.cameras[i].screenPos[0] && this.selectionCoordsA[0] < sim.cameras[i].screenPos[0]+sim.cameras[i].dim[0] && this.selectionCoordsA[1] > sim.cameras[i].screenPos[1] && this.selectionCoordsA[1] < sim.cameras[i].screenPos[1]+sim.cameras[i].dim[1]){
-				var x = (this.selectionCoordsA[0]-sim.cameras[i].screenPos[0])/sim.cameras[i].sizeMultiplier + sim.cameras[i].pos[0];
-				var y = (this.selectionCoordsA[1]-sim.cameras[i].screenPos[1])/sim.cameras[i].sizeMultiplier + sim.cameras[i].pos[1];
-				selectionInEngineA = [x, y];
-				x = (this.selectionCoordsB[0]-sim.cameras[i].screenPos[0])/sim.cameras[i].sizeMultiplier + sim.cameras[i].pos[0];
-				y = (this.selectionCoordsB[1]-sim.cameras[i].screenPos[1])/sim.cameras[i].sizeMultiplier + sim.cameras[i].pos[1];
-				selectionInEngineB = [x, y];
-			}
-		}
-		if(this.selectionType == "block"){
-			var dim = [selectionInEngineB[0]-selectionInEngineA[0], selectionInEngineB[1]-selectionInEngineA[1]];
-			if(dim[0] < 0){
-				var temp = selectionInEngineA[0];
-				selectionInEngineA[0] = selectionInEngineB[0];
-				selectionInEngineB[0] = temp;
-				dim = [selectionInEngineB[0]-selectionInEngineA[0], selectionInEngineB[1]-selectionInEngineA[1]];
-			}
-			if(dim[1] < 0){
-				var temp = selectionInEngineA[1];
-				selectionInEngineA[1] = selectionInEngineB[1];
-				selectionInEngineB[1] = temp;
-				dim = [selectionInEngineB[0]-selectionInEngineA[0], selectionInEngineB[1]-selectionInEngineA[1]];
-			}
-			var rect = new basicObject("block", selectionInEngineA, dim, {gravity:true, density:0.1});
-			var collidingWithAnything = false;
-			for(var i = 0; i < sim.entities.length; i++){
-				if(isCollision(0, sim.entities[i], rect).both){
-					collidingWithAnything = true;
-					break;
-				}
-			}
-			if(!collidingWithAnything){
-				sim.entities.push(rect);
-			}
-			else{
-				console.log("Error: Block summoned inside of existing entity.")
-			}
-		}
-		if(this.selectionType == "circle"){
-			var dim = [Math.sqrt(Math.pow(selectionInEngineA[0]-selectionInEngineB[0], 2) + Math.pow(selectionInEngineA[1]-selectionInEngineB[1], 2))];
-			var circ = new basicObject("circle", selectionInEngineA, dim, {gravity:true, density:0.1});
-			var collidingWithAnything = false;
-			for(var i = 0; i < sim.entities.length; i++){
-				if(isCollision(0, sim.entities[i], circ).both){
-					collidingWithAnything = true;
-					break;
-				}
-			}
-			if(!collidingWithAnything){
-				sim.entities.push(circ);
-			}
-			else{
-				console.log("Error: Block summoned inside of existing entity.")
-			}
 		}
 	}
 }
@@ -335,54 +157,77 @@ function startEngine(){
 		requestAnimationFrame(drawLoop);
 	}
 	document.addEventListener("keydown", function(event){
-		sim.keyMap[event.keyCode] = true;
-		if(event.keyCode == 80){ //p
-			var a = sim.selection[0];
-			var b = sim.selection[1];
-			if(a != null && b == null){
-				console.log("Selection 1 Momentum \nX: " + a.mass*a.veloc[0] + "\nY: " + a.mass*a.veloc[1]);
-			}
-			if(b != null && a == null){
-				console.log("Selection 2 Momentum \nX: " + b.mass*b.veloc[0] + "\nY: " + b.mass*b.veloc[1]);
-			}
-			if(a != null && b != null){
-				console.log("Both Selections Combined Momentum \nX: " + (a.mass*a.veloc[0]+b.mass*b.veloc[0]) + "\nY: " + (a.mass*a.veloc[1]+b.mass*b.veloc[1]));
+		if(ui.selectedTextFieldIndex != -1){
+			if(ui.hoveredElement != ui.textFields[ui.selectedTextFieldIndex].hoveredElement){
+				ui.selectedTextFieldIndex = -1;
 			}
 		}
-		if(event.keyCode == 74){ //j
-			var a = sim.selection[0];
-			var b = sim.selection[1];
-			if(a != null && b == null){
-				console.log("Selection 1 Kinetic Energy: " + a.mass*Math.pow(findMag(a.veloc), 2));
+		if(ui.selectedTextFieldIndex == -1){ //Means no text box is selected
+			sim.keyMap[event.keyCode] = true;
+			if(event.keyCode == 80){ //p
+				var a = sim.selection[0];
+				var b = sim.selection[1];
+				if(a != null && b == null){
+					console.log("Selection 1 Momentum \nX: " + a.mass*a.veloc[0] + "\nY: " + a.mass*a.veloc[1]);
+				}
+				if(b != null && a == null){
+					console.log("Selection 2 Momentum \nX: " + b.mass*b.veloc[0] + "\nY: " + b.mass*b.veloc[1]);
+				}
+				if(a != null && b != null){
+					console.log("Both Selections Combined Momentum \nX: " + (a.mass*a.veloc[0]+b.mass*b.veloc[0]) + "\nY: " + (a.mass*a.veloc[1]+b.mass*b.veloc[1]));
+				}
 			}
-			if(b != null && a == null){
-				console.log("Selection 2 Kinetic Energy: " + b.mass*Math.pow(findMag(b.veloc), 2));
+			if(event.keyCode == 74){ //j
+				var a = sim.selection[0];
+				var b = sim.selection[1];
+				if(a != null && b == null){
+					console.log("Selection 1 Kinetic Energy: " + a.mass*Math.pow(findMag(a.veloc), 2));
+				}
+				if(b != null && a == null){
+					console.log("Selection 2 Kinetic Energy: " + b.mass*Math.pow(findMag(b.veloc), 2));
+				}
+				if(a != null && b != null){
+					console.log("Both Selections Combined Kinetic Energy: " + (a.mass*Math.pow(findMag(a.veloc), 2)+b.mass*Math.pow(findMag(b.veloc), 2)));
+				}
 			}
-			if(a != null && b != null){
-				console.log("Both Selections Combined Kinetic Energy: " + (a.mass*Math.pow(findMag(a.veloc), 2)+b.mass*Math.pow(findMag(b.veloc), 2)));
+			if(event.keyCode == 32){ // 
+				event.preventDefault();
+				if(!sim.paused){
+					clearInterval(updateLoop);
+					sim.paused = true;
+				}
+				else{
+					updateLoop = setInterval(function loop(){
+						sim.loop();
+					}, 20);
+					sim.paused = false;
+				}
+			}
+			if(event.keyCode == 66){ //b
+				ui.selectionType = "block";
+			}
+			if(event.keyCode == 67){ //c
+				ui.selectionType = "circle";
+			}
+			if(event.keyCode == 27){ //esc
+				ui.selectionType = "none";
 			}
 		}
-		if(event.keyCode == 32){ // 
-			event.preventDefault();
-			if(!sim.paused){
-				clearInterval(updateLoop);
-				sim.paused = true;
+		else{
+			var selectedField = ui.textFields[ui.selectedTextFieldIndex];
+			if(selectedField.inputType == "number" && event.keyCode >= 48 && event.keyCode <= 57){
+				if(selectedField.value == "0"){
+					selectedField.value = "";
+				}
+				selectedField.value += String.fromCharCode(event.keyCode);
 			}
-			else{
-				updateLoop = setInterval(function loop(){
-					sim.loop();
-				}, 20);
-				sim.paused = false;
+			if(event.keyCode == 8){ //Delete
+				selectedField.value = selectedField.value.substring(0, selectedField.value.length - 1);
+				if(selectedField.value.length == 0){
+					selectedField.value = "0";
+				}
 			}
-		}
-		if(event.keyCode == 66){ //b
-			ui.selectionType = "block";
-		}
-		if(event.keyCode == 67){ //c
-			ui.selectionType = "circle";
-		}
-		if(event.keyCode == 27){ //esc
-			ui.selectionType = "none";
+
 		}
 	});
 	document.addEventListener("keyup", function(event){

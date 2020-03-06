@@ -36,3 +36,10 @@ function findMag(v){
 function pythag(a, b){
 	return Math.sqrt(sqr(a)+sqr(b));
 }
+function removeElement(elementIndex, array){
+	for(var i = elementIndex; i < array.length-1; i++){
+		array[i] = array[i+1];
+	}
+	array = array.splice(0, array.length-1);
+	return array;
+}
