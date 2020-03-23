@@ -10,6 +10,7 @@ var pointToDraw = {
 }
 toDraw.push(pointToDraw);
 */
+//TODO: Fix camera overlap issues with camera controls
 function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], options){
     this.number = number;
 	this.pos = pos;
@@ -245,16 +246,28 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
         }
         if(typeof(options.fill) != 'undefined'){
             fill = options.fill;
-        }
+		}
         cvs.ctx.beginPath();
         if(fill){
             cvs.ctx.fillStyle = color;
             cvs.ctx.fillRect(this.screenPos[0]+x, this.screenPos[1]+y, width, height);
         }
         else{
-            cvs.ctx.strokeStyle = color;
+			cvs.ctx.strokeStyle = color;
             cvs.ctx.rect(this.screenPos[0]+x, this.screenPos[1]+y, width, height);
             cvs.ctx.stroke();
         }
     }
+}
+function constructCamerasFromString(jsonString){
+	var parsedString = JSON.parse(jsonString);
+	var cameras = [];
+	for(var i = 0; i < parsedString.length; i++){
+		var newCamera = new cameraConstructor(0, [0, 0], [0, 0], [0, 0], {});
+		for(var x in parsedString[i]){
+			newCamera[x] = parsedString[i][x];
+		}
+		cameras.push(newCamera);
+	}
+	return cameras;
 }

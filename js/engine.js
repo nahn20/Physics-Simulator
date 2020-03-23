@@ -1,4 +1,5 @@
 const gravity = 9.81/50; //Should be 50
+const defaultDensity = 0.1;
 function engine(){
 	this.time = 0;
 	this.entities = [];
@@ -35,7 +36,6 @@ function startEngine(){
 	ui = new userInterface();
 	sim.entities = [];
 	sim.cameras = [];
-	var k = [];
 	// for(var i = 1; i < 15; i++){
 	// 	k.push(i*50);
 	// }
@@ -55,37 +55,20 @@ function startEngine(){
 	sim.cameras[1] = new cameraConstructor(1, [0, 0], [0, 300], [600, 300], {sizeMultiplier: 0.5});
 	sim.cameras[2] = new cameraConstructor(2, [0, -200], [600, 0], [600, 600], {sizeMultiplier: 0.5});
 	*/
-	
-	/*
-	//RECTANGLE COLLISION TEST 1\\
-	
-	sim.entities.push(new basicObject("block", [450, 450], [30, 30], {gravity:false, initialVeloc:[10, 0], density:0.1}));
-	//sim.entities.push(new basicObject("block", [850, 0], [60, 60], {gravity:false, initialVeloc:[0, 6]}));
-	sim.entities.push(new basicObject("block", [800, 450], [60, 60], {gravity:false, initialVeloc:[1, 0], density:0.1}));
-	//sim.entities.push(new basicObject("block", [1000, 350], [90, 90], {gravity:true, initialVeloc:[1, 3], density:0.1}));
-	*/
-
-
-	/*
-	//RECTANGLE COLLISION TEST 2\\
-	sim.entities.push(new basicObject("block", [-60, 570], [60, 60], {gravity:false, initialVeloc:[5, 0], density:0.1, color:"rgb(255,0,255)"}));
-	for(var i = 1; i < 28; i++){
-		sim.entities.push(new basicObject("block", [30+i*75, 570-5*i], [60, 60+10*i], {gravity:false, initialVeloc:[0, 0], density:0.1, color:"rgb("+Math.round((Math.random()*255))+","+Math.round((Math.random()*255))+","+Math.round((Math.random()*255))+")"}));
-	}
-	*/
 
 	/*
 	//RECTANGLE COLLISION TEST 3 (SPRING CHAOS)\\
-	sim.entities.push(new basicObject("block", [570, 0], [60, 60], {density:0.1}));
-	sim.entities.push(new basicObject("block", [100, 250], [60, 60], {density:0.1, initialVeloc: [4, 0], color: "blue"}))
+	sim.entities.push(new basicObject("block", [570, 0], [60, 60], {}));
+	sim.entities.push(new basicObject("block", [100, 250], [60, 60], {initialVeloc: [4, 0], color: "blue"}))
 	sim.entities.push(new basicObject("block", [1450,800], [60,20], {gravity:false,infiniteMass:true})); //Spring for black
 	sim.entities.push(new spring(sim.entities[sim.entities.length-1],90,100,20, 10, {sticky: true}))
 	sim.entities.push(new basicObject("block", [510,1000], [60,20], {gravity:false,infiniteMass:true})); //Spring for blue
 	sim.entities.push(new spring(sim.entities[sim.entities.length-1],90,100,20, 10, {sticky: true}))
-	sim.entities.push(new basicObject("block", [-60, 1000], [60, 60], {density:0.1, initialVeloc: [6, -10]}))
-	sim.entities.push(new basicObject("block", [-300, 1500], [30, 30], {density:0.1, initialVeloc: [8, -12]}))
-	sim.entities.push(new basicObject("block", [-800, 4100], [60, 60], {density:0.1, initialVeloc: [3.5, -16]}))
+	sim.entities.push(new basicObject("block", [-60, 1000], [60, 60], {initialVeloc: [6, -10]}))
+	sim.entities.push(new basicObject("block", [-300, 1500], [30, 30], {initialVeloc: [8, -12]}))
+	sim.entities.push(new basicObject("block", [-800, 4100], [60, 60], {initialVeloc: [3.5, -16]}))
 	*/
+
 	/*
 	//SPRING COLLISION TEST 1\\ //BROKEN
 	sim.entities.push(new basicObject("block", [1200,1300], [60,20], {gravity:false,infiniteMass:true}));
@@ -121,33 +104,33 @@ function startEngine(){
 		sim.entities.push(new basicObject("block", [400+1000*i, 1100-s*100], [100+s*100, 100+s*100], {gravity:false,mass:Math.pow(10,2*i),initialVeloc:[-.0001,0],color:"gray"}));
 	}
 	*/
-	/*
-	//Circle Collision Test\\
-	sim.entities.push(new basicObject("circle", [100, 100], [90], {initialVeloc: [3, 2],gravity:true, density:0.1}));
-	sim.entities.push(new basicObject("circle", [500, 400], [50], {gravity:true, density:0.1}));
-	*/
 
 	/*
 	//Rotation Collision Test\\
-	//sim.entities.push(new basicObject("block", [450, 450], [100, 100], {gravity:false, initialVeloc:[2, 0], density:0.1, rAngle:0, interactable:false}));
-	//sim.entities.push(new basicObject("circle", [450, 450], [15], {gravity:false, initialVeloc:[2, 0], density:0.1, interactable:false}));
+	//sim.entities.push(new basicObject("block", [450, 450], [100, 100], {gravity:false, initialVeloc:[2, 0], rAngle:0, interactable:false}));
+	//sim.entities.push(new basicObject("circle", [450, 450], [15], {gravity:false, initialVeloc:[2, 0], interactable:false}));
 	sim.entities.push(new basicObject("block", [600, 400], [100, 100], {gravity:false, initialVeloc:[10, 0], rAngle:0, rInitialVeloc:5, autoReturnColor:"black", collisionFlash:"red"}));
 	sim.entities.push(new basicObject("block", [1100, 400], [200, 100], {gravity:false, initialVeloc:[5, 0], rAngle:0, rInitialVeloc:3, autoReturnColor:"black", collisionFlash:"red"}));
 	sim.entities.push(new basicObject("block", [300, 0], [50, 1000], {gravity:false, initialVeloc:[0, 0], rAngle:0, rInitialVeloc:0, infiniteMass:true, infiniteI:true, autoReturnColor:"black", collisionFlash:"red"}));
 	sim.entities.push(new basicObject("block", [1500, 0], [50, 1000], {gravity:false, initialVeloc:[0, 0], rAngle:0, rInitialVeloc:0, infiniteMass:true, infiniteI:true, autoReturnColor:"black", collisionFlash:"red"}));
-	//sim.entities.push(new basicObject("block", [100, 150], [300, 10], {gravity:false, density:0.1, rAngle:0, interactable:true, rInitialVeloc:-5}));
+	//sim.entities.push(new basicObject("block", [100, 150], [300, 10], {gravity:false, rAngle:0, interactable:true, rInitialVeloc:-5}));
+	*/
+	/*
+	sim.cameras[0] = new cameraConstructor(0, [0, 0], [0, 0], [1200, 600], {sizeMultiplier: 0.6});
+	sim.entities.push(new basicObject("block", [0, 0], [2000, 50], {gravity:false, infiniteMass:true}));
+	sim.entities.push(new basicObject("block", [0, 1000], [2000, 50], {gravity:false, infiniteMass:true}));
+	sim.entities.push(new basicObject("block", [-50, 0], [50, 1050], {gravity:false, infiniteMass:true}));
+	sim.entities.push(new basicObject("block", [2000, 0], [50, 1050], {gravity:false, infiniteMass:true}));
+	sim.entities.push(new basicObject("block", [500, 500], [50, 50], {gravity:false, initialVeloc: [10, 5]}));
 	*/
 
-	sim.entities.push(new basicObject("block", [500, 200], [50, 50], {gravity:true, initialVeloc:[10, 0], gravity:false, autoReturnColor:"black", collisionFlash:"red"}));
-	sim.entities.push(new basicObject("block", [800, 200], [50, 50], {gravity:false, initialVeloc:[0, 0], autoReturnColor:"black", collisionFlash:"red"}));
-	sim.entities.push(new basicObject("block", [1500, 0], [50, 1000], {infiniteMass: true, gravity:false, initialVeloc:[0, 0], autoReturnColor:"black", collisionFlash:"red"}));
-	sim.entities.push(new basicObject("block", [300, 0], [50, 1000], {infiniteMass: true, gravity:false, initialVeloc:[0, 0], autoReturnColor:"black", collisionFlash:"red"}));
-	//sim.entities.push(new basicObject("block", [200, 200], [50, 50], {gravity:false, initialVeloc:[0, 0], mass:999999, autoReturnColor:"black", collisionFlash:"red"}));
-	sim.cameras[0] = new cameraConstructor(0, [0, 0], [0, 0], [1200, 600], {sizeMultiplier: 0.6});
-
+	sim.entities = constructEntitiesFromString(presets[presets.length-1].simText);
+	sim.cameras = constructCamerasFromString(presets[presets.length-1].camText);
 
 	var updateLoop = setInterval(function loop(){
-		sim.loop();
+		if(!sim.paused){
+			sim.loop();
+		}
 	}, 20);
 	requestAnimationFrame(drawLoop);
 	function drawLoop(){
@@ -192,16 +175,7 @@ function startEngine(){
 			}
 			if(event.keyCode == 32){ // 
 				event.preventDefault();
-				if(!sim.paused){
-					clearInterval(updateLoop);
-					sim.paused = true;
-				}
-				else{
-					updateLoop = setInterval(function loop(){
-						sim.loop();
-					}, 20);
-					sim.paused = false;
-				}
+				sim.paused = !sim.paused;
 			}
 			if(event.keyCode == 66){ //b
 				ui.selectionType = "block";
@@ -215,22 +189,56 @@ function startEngine(){
 		}
 		else{
 			var selectedField = ui.textFields[ui.selectedTextFieldIndex];
-			if(selectedField.inputType == "number" && event.keyCode >= 48 && event.keyCode <= 57){
-				if(selectedField.value == "0"){
+			if((selectedField.inputType == "int" || selectedField.inputType == "intNullX") && event.keyCode >= 48 && event.keyCode <= 57 || event.keyCode == 32){
+				if(selectedField.value == "0" || selectedField.value == "x"){
 					selectedField.value = "";
 				}
 				selectedField.value += String.fromCharCode(event.keyCode);
 			}
+			if(selectedField.inputType == "color" && event.keyCode >= 65 && event.keyCode <= 90){
+				if(selectedField.value.length == 0){
+					selectedField.value += String.fromCharCode(event.keyCode); //Uper case
+				}
+				else{
+					selectedField.value += String.fromCharCode(event.keyCode+32);
+				}
+			}
+			if(selectedField.inputType == "string" && ((event.keyCode >= 65 && event.keyCode <= 90) || event.keyCode == 189 || event.keyCode == 188)){
+				if(event.keyCode >= 65 && event.keyCode <= 90){
+					if(selectedField.value.length == 0 || selectedField.value.charAt(selectedField.value.length-1) == " " || selectedField.value.charAt(selectedField.value.length-1) == ","){
+						selectedField.value += String.fromCharCode(event.keyCode); //Uper case
+					}
+					else{
+						selectedField.value += String.fromCharCode(event.keyCode+32);
+					}
+				}
+				else{
+					selectedField.value += event.key;
+				}
+			}
 			if(event.keyCode == 8){ //Delete
 				selectedField.value = selectedField.value.substring(0, selectedField.value.length - 1);
 				if(selectedField.value.length == 0){
-					selectedField.value = "0";
+					if(selectedField.inputType == "int"){
+						selectedField.value = "0";
+					}
+					if(selectedField.inputType == "intNullX"){
+						selectedField.value = "x";
+					}
 				}
 			}
-
+			if(ui.hoveredElement == 0){ //Search
+				updateSearch();
+			}
 		}
 	});
 	document.addEventListener("keyup", function(event){
 		sim.keyMap[event.keyCode] = false;
 	});
+}
+function resetEngine(){
+	cvs.init();
+	sim = new engine();
+	sim.entities = [];
+	sim.cameras = [];
 }

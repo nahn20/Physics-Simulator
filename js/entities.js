@@ -14,7 +14,7 @@ function basicObject(type="block", pos=[0,0],dim=[10,10],options){
 	//\\
 	this.dim = dim;
 	this.mass = 0;
-	this.density = 0;
+	this.density = defaultDensity;
 	this.gravity = true;
 	this.infiniteMass = false;
 	this.infiniteI = false;
@@ -41,7 +41,7 @@ function basicObject(type="block", pos=[0,0],dim=[10,10],options){
 	if(typeof(options.pointMass) != 'undefined'){
 		this.pointMass = options.pointMass;
 	}
-	if(typeof(options.mass) != 'undefined'){ //Checks for set mass first
+	if(typeof(options.mass) != 'undefined' && options.mass != 0){ //Checks for set mass first
 		this.mass = options.mass;
 		if(this.type == "block"){
 			this.density = this.mass/(this.dim[0]*this.dim[1]);
@@ -51,17 +51,15 @@ function basicObject(type="block", pos=[0,0],dim=[10,10],options){
 		}
 	}
 	else{
-		var density = 0.1;
 		if(typeof(options.density) != 'undefined'){ //Otherwise uses a density choice, or 0.1 for density
-			density = options.density;
+			this.density = options.density;
 		}
 		if(this.type == "block"){
-			this.mass = density*this.dim[0]*this.dim[1];
+			this.mass = this.density*this.dim[0]*this.dim[1];
 		}
 		if(this.type == "circle"){
-			this.mass = density*Math.PI*this.dim[0]*this.dim[0];
+			this.mass = this.density*Math.PI*this.dim[0]*this.dim[0];
 		}
-		this.density = density;
 	}
 	if(typeof(options.rAngle) != 'undefined'){
 		this.rAngle = options.rAngle;
@@ -655,4 +653,26 @@ function isLineLineCollision(line1, line2){
 }
 function sumArray(array){
 	return array.reduce((a, b) => a + b, 0);
+}
+function constructEntitiesFromString(jsonString){
+	var parsedString = JSON.parse(jsonString);
+	var entities = [];
+
+	for(var i = 0; i < parsedString.length; i++){
+		if(parsedString[i].type == "spring"){
+			var newEntity = new spring(0,0,0,0,0, {});
+			for(var x in parsedString[i]){
+				newEntity[x] = parsedString[i][x];
+			}
+			entities.push(newEntity);
+		}
+		if(parsedString[i].type != "spring"){
+			var newEntity = new basicObject("block", [0, 0], [0, 0], {});
+			for(var x in parsedString[i]){
+				newEntity[x] = parsedString[i][x];
+			}
+			entities.push(newEntity);
+		}
+	}
+	return entities;
 }

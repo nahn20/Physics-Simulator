@@ -12,17 +12,22 @@ var cvs = {
 			var canvasCoords = cvs.canvas.getBoundingClientRect();
 			var mouseX = event.x - canvasCoords.left;
 			var mouseY = event.y - canvasCoords.top;
-			for(var i = 0; i < sim.cameras.length; i++){
-				if(mouseX > sim.cameras[i].screenPos[0] && mouseX < sim.cameras[i].screenPos[0]+sim.cameras[i].dim[0] && mouseY > sim.cameras[i].screenPos[1] && mouseY < sim.cameras[i].screenPos[1]+sim.cameras[i].dim[1]){
-					var shift = event.deltaY/100;
-					var centerInEngineX = (sim.cameras[i].dim[0]/2)/sim.cameras[i].sizeMultiplier + sim.cameras[i].pos[0];
-					var centerInEngineY = (sim.cameras[i].dim[1]/2)/sim.cameras[i].sizeMultiplier + sim.cameras[i].pos[1];
-					sim.cameras[i].sizeMultiplier -= shift;
-					sim.cameras[i].sizeMultiplier = Math.min(Math.max(parseFloat(sim.cameras[i].sizeMultiplier), 0.1), 20); //Restricts size multiplier
-
-					sim.cameras[i].pos[0] = centerInEngineX - sim.cameras[i].dim[0]/(2*sim.cameras[i].sizeMultiplier)
-					sim.cameras[i].pos[1] = centerInEngineY - sim.cameras[i].dim[1]/(2*sim.cameras[i].sizeMultiplier)
+			if(ui.hoveredElement == -1){ //Only if not hoving over UI
+				for(var i = 0; i < sim.cameras.length; i++){
+					if(mouseX > sim.cameras[i].screenPos[0] && mouseX < sim.cameras[i].screenPos[0]+sim.cameras[i].dim[0] && mouseY > sim.cameras[i].screenPos[1] && mouseY < sim.cameras[i].screenPos[1]+sim.cameras[i].dim[1]){
+						var shift = event.deltaY/100;
+						var centerInEngineX = (sim.cameras[i].dim[0]/2)/sim.cameras[i].sizeMultiplier + sim.cameras[i].pos[0];
+						var centerInEngineY = (sim.cameras[i].dim[1]/2)/sim.cameras[i].sizeMultiplier + sim.cameras[i].pos[1];
+						sim.cameras[i].sizeMultiplier -= shift;
+						sim.cameras[i].sizeMultiplier = Math.min(Math.max(parseFloat(sim.cameras[i].sizeMultiplier), 0.1), 20); //Restricts size multiplier
+	
+						sim.cameras[i].pos[0] = centerInEngineX - sim.cameras[i].dim[0]/(2*sim.cameras[i].sizeMultiplier)
+						sim.cameras[i].pos[1] = centerInEngineY - sim.cameras[i].dim[1]/(2*sim.cameras[i].sizeMultiplier)
+					}
 				}
+			}
+			else if(ui.hoveredElement == 0){
+				ui.scrollPos += event.deltaY;
 			}
 		});
 		this.canvas.addEventListener("contextmenu", function(event){
@@ -67,7 +72,7 @@ var cvs = {
 						for(var k = 0; k < sim.entities.length; k++){
 							if(isCollision(0, mouseEntity,sim.entities[k]).both == true){
 								console.log(sim.entities[k]);
-								for(var key = 49; key <= 57; key++){
+								for(var key = 49; key <= 57; key++){ //1-9
 									if(sim.keyMap[key]){
 										if(sim.selection[key-49] == k){
 											sim.selection[key-49] = null;
@@ -78,6 +83,23 @@ var cvs = {
 												if(sim.selection[key-49] == sim.selection[j] && key-49 != j){
 													sim.selection[j] = null;
 												}
+											}
+										}
+									}
+								}
+								if(sim.keyMap[16]){ 
+									var isRemoved = false;
+									for(var q = 0; q <= 9; q++){ //Gets rid of that selection for any color
+										if(sim.selection[q] == k){
+											sim.selection[q] = null;
+											isRemoved = true;
+										}
+									}
+									if(!isRemoved){ //Otherwise highlights with next selection
+										for(var q = 0; q <= 9; q++){
+											if(sim.selection[q] == null){
+												sim.selection[q] = k;
+												break;
 											}
 										}
 									}

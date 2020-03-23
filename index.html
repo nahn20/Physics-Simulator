@@ -8,18 +8,36 @@
 		<script src="js/entities.js"></script>
 		<script src="js/camera.js"></script>
 		<script src="js/supportFunctions.js"></script>
+		<script src="js/presets.js"></script>
 		
 
         <style>
             canvas{
                 background: skyblue;
+				position: absolute;
             }
             body{
                 margin: 0;
             }
+			#ssCanvas{
+				z-index: -1;
+				opacity: 0;
+			}
+			#copyText{
+				opacity: 0;
+				cursor: default;
+			}
+			#download{
+				visibility: hidden;
+			}
         </style>
     </head>
-    <body onload="startEngine()">
-        <canvas width=1200 height=600 id="canvas"></canvas>
+    <body onload="startEngine(false)">
+		<canvas width=1200 height=600 id="canvas"></canvas>
+		<canvas width=1200 height=600 id="ssCanvas"></canvas>
+		<input type="text" id="copyText"></div>
+		<div id="bleh">
+			<a href="" id="download" download>Download</a>
+		</div>
     </body>
 </html>
