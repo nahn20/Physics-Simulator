@@ -130,7 +130,7 @@ var cvs = {
 			var canvasCoords = cvs.canvas.getBoundingClientRect();
 			var mouseX = event.x - canvasCoords.left;
 			var mouseY = event.y - canvasCoords.top;
-			ui.mousePos = [mouseX, mouseY];
+			ui.mouseMoveTrigger([mouseX, mouseY]);
 		});
 		this.canvas.addEventListener("mousedown", function(event){
 			var canvasCoords = cvs.canvas.getBoundingClientRect();
@@ -145,6 +145,7 @@ var cvs = {
 				ui.mouseDown = false;
 				ui.mouseUpTrigger();
 			}
+			ui.mouseDownTrigger();
 		});
 		this.canvas.addEventListener("mouseup", function(event){
 			var canvasCoords = cvs.canvas.getBoundingClientRect();

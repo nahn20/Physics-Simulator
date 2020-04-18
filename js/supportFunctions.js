@@ -75,8 +75,8 @@ function scrubColor(color){
 	}
 	//If the match isn't perfect, it'll find something using my handy dandy color dictionary
 	if(color.length > 1){ //Doesn't check if too short
-		var typos = [["Blac", "Blak", "Lack", "Lac", "Lak"], ["Gray", "Gre", "Gra", "Ray", "Rey"], ["Blu", "Bl"], ["Brow", "Broon", "Br"], ["Re", "Ed", "Reds"], ["Orang", "Range", "Rang", "Ora", "Or"], ["Yell", "Yello", "Ellow"], ["Pin", "Pinc", "Ink"], ["Pupl", "Purpl", "Porpol", "Purp"]];
-		var colors = ["Black", "Grey", "Blue", "Brown", "Red", "Orange", "Yellow", "Pink", "Purple"];
+		var typos = [["Blac", "Blak", "Lack", "Lac", "Lak"], ["Gray", "Gre", "Gra", "Ray", "Rey"], ["Blu", "Bl"], ["Brow", "Broon", "Br"], ["Re", "Ed", "Reds"], ["Orang", "Range", "Rang", "Ora", "Or"], ["Yell", "Yello", "Ellow"], ["Pin", "Pinc", "Ink"], ["Pupl", "Purpl", "Porpol", "Purp", "Purpoo"], ["Smiley", "Smile", "Happy", "Yay"]];
+		var colors = ["Black", "Grey", "Blue", "Brown", "Red", "Orange", "Yellow", "Pink", "Purple", "Smiley"];
 		var foundMatch = -1;
 		var breakVar = false; //I'm too lazy to check if the built in break works for double for
 		for(var q = 0; q < typos.length && !breakVar; q++){
@@ -89,6 +89,9 @@ function scrubColor(color){
 		}
 		if(foundMatch == -1){
 			return "Black";
+		}
+		else if(foundMatch == 9){
+			return cvs.ctx.createPattern(patterns.smiley, 'repeat');
 		}
 		else{
 			return colors[foundMatch];
@@ -128,3 +131,7 @@ function aSimB(a, b){ //Compares two words a and b to see how similar they are
 	sim /= a.length;
 	return sim;
 }
+var patterns = {
+	smiley : new Image(),
+}
+patterns.smiley.src = "images/patterns/smiley.png";

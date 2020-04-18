@@ -4,6 +4,7 @@ function basicObject(type="block", pos=[0,0],dim=[10,10],options){
 	this.veloc = [0, 0];
 	this.accel = [0, 0];
 	this.force = [[0], [0]];
+	this.vac = [[]]; //Velocity after collision. Follows format of [v after 1st collision, v after 2nd collision] etc. v formatted as [x, y]. After each collision the array will be shifted up, so vac[0] is always the velocity after the next collision
 	//Rotational Stuff\\
 	this.rAngle = 0; //Degrees, sorry. Also positive is clockwise
 	this.rVeloc = 0;
@@ -29,6 +30,10 @@ function basicObject(type="block", pos=[0,0],dim=[10,10],options){
 	this.collisionCounter = 0;
 	this.displayNumCollision = false;
 	this.pointMass = true;
+	this.collidedThisTick = false;
+	if(typeof(options.vac) != 'undefined'){
+		this.vac = options.vac;
+	}
 	if(typeof(options.gravity) != 'undefined'){
 		this.gravity = options.gravity;
 	}
@@ -128,6 +133,7 @@ function basicObject(type="block", pos=[0,0],dim=[10,10],options){
 			if(sim.entities[i] != this && sim.entities[i].interactable == true){
 				var collisionReturns = isCollision(0, this, sim.entities[i]);
 				if(isRectRectCollision(0, this, sim.entities[i]).both && sim.entities[i].type == "spring"){ //Spring block collision
+					//this.collidedThisTick = true; //Maybe?
 					var force = sumArray(this.force[0]);
 					sim.entities[i].force[0].push(force);
 					this.force[0].push(-force);
@@ -136,6 +142,7 @@ function basicObject(type="block", pos=[0,0],dim=[10,10],options){
 					this.force[1].push(-force);
 				} //Redo the structure below: It runs all the checks
 				else if(collisionReturns.both){
+					this.collidedThisTick = true;
 					if(this.collisionFlash != false){
 						this.color = this.collisionFlash;
 					}
@@ -183,17 +190,28 @@ function basicObject(type="block", pos=[0,0],dim=[10,10],options){
 							var k = this.energyLossCoefficient*sim.entities[i].energyLossCoefficient;
 							var aStuff = findVelocFromRotation(this, collisionReturns.collisionCoords);
 							var bStuff = findVelocFromRotation(sim.entities[i], collisionReturns.collisionCoords);
+							function formatVac(vac, i){ //Takes the first vector of vac (ex. this.vac[0]). i is which element (0:x, 1:y)
+								var cleanVac = null;
+								if(typeof(vac[i]) != 'undefined'){
+									cleanVac = vac[i];
+								}
+								return cleanVac;
+							}
 							var a = {
 								m : this.density,
 								v : aStuff.x+this.veloc[0],
+								vac : formatVac(this.vac[0], 0),
 							}; //Using variable names from my equation, sorry for bad naming convention
 							var b = {
 								m : sim.entities[i].density,
 								v : bStuff.x+sim.entities[i].veloc[0],
+								vac : formatVac(sim.entities[i].vac[0], 0),
 							}
 							var vx = this.bigCollisionMomentumEquation(a, b, k);
 							a.v = aStuff.y + this.veloc[1];
+							a.vac = formatVac(this.vac[0], 1);
 							b.v = bStuff.y + sim.entities[i].veloc[1];
+							b.vac = formatVac(sim.entities[i].vac[0], 1);
 							var vy = this.bigCollisionMomentumEquation(a, b, k);
 							vx -= this.veloc[0];
 							vy -= this.veloc[1];
@@ -221,7 +239,7 @@ function basicObject(type="block", pos=[0,0],dim=[10,10],options){
 		}
 	}
 	this.bigCollisionMomentumEquation = function(a, b, k){
-		//Third Try\\
+		/*//Solves for conservation of colllision and momentum with a k loss factor
 		var alpha = (a.m*a.v)+(b.m*b.v);
 		var c = (a.m*b.m)+(a.m*a.m);
 		var d = -2*a.m*alpha
@@ -231,6 +249,7 @@ function basicObject(type="block", pos=[0,0],dim=[10,10],options){
 			coefficient = -1;
 		}
 		var velocFinal = (coefficient*Math.sqrt(blob)-(d/(2*Math.sqrt(c))))/Math.sqrt(c);
+		*/
 
 		//Elastic but Wack\\
 		// var c = a.m*a.v+b.m*b.v;
@@ -242,8 +261,20 @@ function basicObject(type="block", pos=[0,0],dim=[10,10],options){
 		// }
 		// var velocFinal = (coefficient*Math.sqrt(a.m*b.m*a.v*a.v+b.m*b.m*b.v*b.v-c*c+e*e/(4*d))-e/(2*Math.sqrt(d)))/Math.sqrt(d);
 
-		//ELASTIC VERSION\\
-		//var velocFinal = a.v*(a.m-b.m)/(a.m+b.m)+2*b.v*b.m/(a.m+b.m);
+		var velocFinal;
+		if(a.vac != null){ //If this one has a defined vac, then use it
+			if(b.vac != null){
+				console.log("WARNING: Overdefined velocities after collision.");
+			}
+			velocFinal = a.vac;
+		}
+		else if(b.vac != null){ //If the other has a defined vac. Need to solve for this one's
+			velocFinal = (a.m*a.v+b.m*b.v-b.m*b.vac)/a.m;
+		}
+		else{
+			//ELASTIC VERSION\\
+			velocFinal = a.v*(a.m-b.m)/(a.m+b.m)+2*b.v*b.m/(a.m+b.m);
+		}
 		
 		return velocFinal;
 	}

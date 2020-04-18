@@ -23,6 +23,14 @@ function engine(){
 		for(var i = 0; i < this.entities.length; i++){
 			this.entities[i].updatePos();
 		}
+		for(var i = 0; i < this.entities.length; i++){
+			if(this.entities[i].collidedThisTick){
+				var newVac = [];
+				for(var q = 1; q < this.entities[i].vac.length; q++){
+					newVac[q-1] = this.entities[i].vac[q];
+				}
+			}
+		}
 	}
 	this.drawLoop = function(){
 		for(var i = 0; i < this.cameras.length; i++){
@@ -124,8 +132,10 @@ function startEngine(){
 	sim.entities.push(new basicObject("block", [500, 500], [50, 50], {gravity:false, initialVeloc: [10, 5]}));
 	*/
 
-	sim.entities = constructEntitiesFromString(presets[presets.length-1].simText);
-	sim.cameras = constructCamerasFromString(presets[presets.length-1].camText);
+	sim.entities = constructEntitiesFromString(presets[0].simText);
+	sim.cameras = constructCamerasFromString(presets[0].camText);
+	// sim.entities = constructEntitiesFromString(presets[presets.length-1].simText);
+	// sim.cameras = constructCamerasFromString(presets[presets.length-1].camText);
 
 	var updateLoop = setInterval(function loop(){
 		if(!sim.paused){
@@ -140,11 +150,6 @@ function startEngine(){
 		requestAnimationFrame(drawLoop);
 	}
 	document.addEventListener("keydown", function(event){
-		if(ui.selectedTextFieldIndex != -1){
-			if(ui.hoveredElement != ui.textFields[ui.selectedTextFieldIndex].hoveredElement){
-				ui.selectedTextFieldIndex = -1;
-			}
-		}
 		if(ui.selectedTextFieldIndex == -1){ //Means no text box is selected
 			sim.keyMap[event.keyCode] = true;
 			if(event.keyCode == 80){ //p
@@ -230,6 +235,9 @@ function startEngine(){
 			if(ui.hoveredElement == 0){ //Search
 				updateSearch();
 			}
+		}
+		if(ui.selectedTextFieldIndex != -1){
+			ui.keyDownTrigger();
 		}
 	});
 	document.addEventListener("keyup", function(event){

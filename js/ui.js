@@ -79,7 +79,9 @@ function userInterface(){
 	this.iconDimensions = [32, 32];
 	this.margin = 8;
 	this.hoveredElement = -1; //Element that is currently being hovered over
-	this.fillStyle = "rgba(0, 0, 0, 0.2)";
+	this.fillStyle = "rgb(153, 0, 255)";
+	//this.fillStyle = "rgba(0, 0, 0, 0.2)";
+	//this.fillStyle = cvs.ctx.createPattern(patterns.smiley, 'repeat');
 	this.selectedTextFieldIndex = -1;
 	this.textFields = [];
 	this.checkboxFields = [];
@@ -87,17 +89,20 @@ function userInterface(){
 	this.minSideMenuDim = [200, 500]; //Constant
 	this.maxSideMenuDim = [this.minSideMenuDim[0], this.minSideMenuDim[1]]; //Changes based on text field size
 
-	this.scrollPos = 0; //TODO: Resets on menu switch. Always positive. 
+	this.scrollPos = 0; //Always positive. 
+	this.moveDrag = false;
 	//Creating text fields
 	this.headers = [[]];
 	this.headerTypes = [[]]; //I'm so sorry this is getting convoluted
 	this.defaultValues = [[]]; //This is so much worse
 	this.headers[0] = ["- Preset Search -", "Chapter:", "Problem:", "Tags:"];
 	this.headerTypes[0] = ["none", "int", "int", "string"];
-	this.headers[1] = ["Color:", "Mass:", "X Velocity:", "Y Velocity:", "Gravity:"]; //Color must come first
-	this.headerTypes[1] = ["color", "intNullX", "int", "int", "bool"];
+	this.headers[1] = ["Color:", "Mass:", "X Velocity:", "Y Velocity:", "Gravity:", "X VAC[0]:", "Y VAC[0]:"]; //Color must come first
+	this.headerTypes[1] = ["color", "intNullX", "int", "int", "bool", "intNullX", "intNullX"];
 	this.headers[2] = ["Color:", "Mass:", "X Velocity:", "Y Velocity:", "Gravity:"];
 	this.headerTypes[2] = ["color", "intNullX", "int", "int", "bool"];
+	this.headers[4] = ["- Settings -", "Background Color:"];
+	this.headerTypes[4] = ["none", "color"];
 	for(var q = 0; q < this.headers.length; q++){
 		if(this.headers[q] != null && this.headerTypes[q] != null){ //Idk if this works. Issue of if you use this.headers[100]
 			for(var i = 0; i < this.headers[q].length; i++){
@@ -110,6 +115,7 @@ function userInterface(){
 			}
 		}
 	}
+	this.textFields[findStartIndex(4, this.textFields)].value = "Grey"; //Sets background color and changes the text value
 	// for(var i = 0; i < this.headers[0].length; i++){
 	// 	this.textFields[this.textFields.length] = new textField([widthMultiplierThing*this.headers[0][i].length+this.menuPos[0]+this.iconDimensions[0]+this.margin, this.menuPos[1]+30*i], 0, {});
 	// }
@@ -140,6 +146,13 @@ function userInterface(){
 		}
 	}
 	this.drawMenu = function(){
+		//Looking at text field to see what the background color should be
+		var t = findStartIndex(4, ui.textFields); //hoveredElement == 4 used for finding this when you change settings position later
+		this.fillStyle = scrubColor(ui.textFields[t].value);
+		if(this.fillStyle == "Black"){
+			this.fillStyle = "Grey";
+		}
+
 		if(this.menu == 0 && sim.keyMap[16]){ //Not the most intelligent solution to this
 			this.menu = 3;
 		}
@@ -148,7 +161,7 @@ function userInterface(){
 		}
 		var sourceArray = [];
 		if(this.menu == 0){ //Regular menu
-			sourceArray = ["images/icons/search.png", "images/icons/block.png", "images/icons/circle.png", "images/icons/camera.png"];
+			sourceArray = ["images/icons/search.png", "images/icons/block.png", "images/icons/circle.png", "images/icons/camera.png", "images/icons/gear.png"];
 		}
 		if(this.menu == 1){ //Menu for having 1 selected
 			sourceArray = ["images/icons/x.png"];
@@ -161,7 +174,7 @@ function userInterface(){
 		}
 
 		function hasDropdown(hoveredElement){ //Returns true if there's a dropdown for that element
-			var elementsWithDropdown = [0, 1, 2];
+			var elementsWithDropdown = [0, 1, 2, 4];
 			for(var i = 0; i < elementsWithDropdown.length; i++){
 				if(hoveredElement == elementsWithDropdown[i] || hoveredElement == elementsWithDropdown[i]+1000){
 					return true;
@@ -231,13 +244,32 @@ function userInterface(){
 					var heightMargin = 10;
 					var leftMargin = this.menuPos[0]+this.iconDimensions[0]+this.margin/2;
 					var topMargin = 0.55*30+(this.margin+this.iconDimensions[1])*(this.hoveredElement%100)+this.menuPos[1]+30*this.headers[this.hoveredElement].length; //Taken from above (see above)
-					if(ui.scrollPos < 0){
+					const scrollUpperLim = 0;
+					const scrollLowerLim = Math.floor(searchDisplayPresets.length/numPerRow)*(heightMargin+dim[1])-0.7*this.sideMenuDim[1];
+					if(ui.scrollPos < scrollUpperLim){ //Upper limit
 						ui.scrollPos -= 0.6*ui.scrollPos;
 					}
-					var cap = 1000;
-					if(ui.scrollPos > cap){
-						ui.scrollPos -= 0.6*(ui.scrollPos-cap);
+					if(ui.scrollPos > scrollLowerLim){ //Lower limit
+						ui.scrollPos += 0.6*(scrollLowerLim-ui.scrollPos);
 					}
+					var scrollPercent = ui.scrollPos/Math.abs(scrollUpperLim-scrollLowerLim);
+					var scrollBar = {
+						x: leftMargin+this.sideMenuDim[0]-15,
+						y: topMargin,
+						w: 10,
+						h: this.sideMenuDim[1]-topMargin-1,
+						miniBarH: 300/searchDisplayPresets.length,
+					}
+					//Drawing border for scroll bar
+					/*
+					cvs.ctx.beginPath();
+					cvs.ctx.strokeStyle = "rgba(0, 0, 0, 0.5)";
+					cvs.ctx.rect(scrollBar.x, scrollBar.y, scrollBar.w, scrollBar.h);
+					cvs.ctx.stroke();
+					*/
+					//Drawing actual scroll bar itself
+					cvs.ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+					cvs.ctx.fillRect(scrollBar.x, scrollBar.y+scrollPercent*(scrollBar.h-scrollBar.miniBarH), scrollBar.w, scrollBar.miniBarH);
 					var min = numPerRow*Math.floor(ui.scrollPos/(dim[1]+heightMargin));
 					if(min<0){min=0;}
 					for(var i = min; i < ((min+numPerColumn*numPerRow < searchDisplayPresets.length)?(min+numPerColumn*numPerRow):(searchDisplayPresets.length)); i++){
@@ -250,6 +282,10 @@ function userInterface(){
 						ui.drawImage(x, y, dim, presets[searchDisplayPresets[i][0]].imgSrc);
 
 					}
+				}
+				if(this.hoveredElement == 4){
+					var shift = [0, 80];
+					this.drawImage(shift[0]+this.sideMenuDim[0]-(this.iconDimensions[0]+this.margin)+this.menuPos[0]+this.iconDimensions[0]+this.margin, shift[1]+(this.margin+this.iconDimensions[1])*(this.hoveredElement%100)+this.menuPos[1], this.iconDimensions, "images/icons/move.png");
 				}
 			}
 			cvs.ctx.restore();
@@ -298,6 +334,31 @@ function userInterface(){
                 cvs.ctx.stroke();
 			}
 		}
+	}
+	this.mouseMoveTrigger = function(newMousePos){
+		if(this.moveDrag){ //Uses where the mouse WAS relative to menu coords, then updates menu coords to have same displacement from the new mouse pos
+			var oldMenuPos = this.menuPos;
+			var displacement = [oldMenuPos[0]-this.mousePos[0], oldMenuPos[1]-this.mousePos[1]];
+			this.menuPos = [displacement[0]+newMousePos[0], displacement[1]+newMousePos[1]];
+			if(this.menuPos[0] < -this.iconDimensions[0]/2){
+				this.menuPos[0] = -this.iconDimensions[0]/2;
+			}
+			var settingsHoveredElementIndex = 4; //this.hoveredElement == 4. Look here when you're replacing the position of settings. Need to change that first constant
+			var yLimit = -(settingsHoveredElementIndex*(this.iconDimensions[1]+this.margin)+this.iconDimensions[1]/2); //Making it so the settings icon can't go completely off screen
+			if(this.menuPos[1] < yLimit){
+				this.menuPos[1] = yLimit;
+			}
+			var actualDisplacement = [this.menuPos[0]-oldMenuPos[0], this.menuPos[1]-oldMenuPos[1]]; //Corrects for the issue of hitting x or y limit. This is the actual displacement. 
+			for(var i = 0; i < this.textFields.length; i++){ //Moving all the text and checkbox fields by the same amount. It would've been smarter to draw these fields based relative to the ui position, instead of giving them a coordinate position
+				this.textFields[i].pos[0] += actualDisplacement[0];
+				this.textFields[i].pos[1] += actualDisplacement[1];
+			}
+			for(var i = 0; i < this.checkboxFields.length; i++){
+				this.checkboxFields[i].pos[0] += actualDisplacement[0];
+				this.checkboxFields[i].pos[1] += actualDisplacement[1];
+			}
+		}
+		this.mousePos = newMousePos;
 	}
 	this.clickTrigger = function(){
 		//Deals with menu selection
@@ -403,7 +464,18 @@ function userInterface(){
 			}
 		}
 	}
+	this.mouseDownTrigger = function(){
+		if(this.hoveredElement == 4){
+			var shift = [0, 80]; //Same as the other shift
+			var moveButtonX = this.sideMenuDim[0]-(this.iconDimensions[0]+this.margin)+this.menuPos[0]+this.iconDimensions[0]+this.margin+shift[0];
+			var moveButtonY = (this.margin+this.iconDimensions[1])*(this.hoveredElement%100)+this.menuPos[1]+shift[1];
+			if(this.mousePos[0] > moveButtonX && this.mousePos[0] < moveButtonX + this.iconDimensions[0] && this.mousePos[1] > moveButtonY && this.mousePos[1] < moveButtonY + this.iconDimensions[1]){
+				this.moveDrag = true;
+			}
+		}
+	}
 	this.mouseUpTrigger = function(){
+		this.moveDrag = false;
 		var selectionInEngineA;
 		var selectionInEngineB;
 		for(var i = 0; i < sim.cameras.length; i++){
@@ -479,6 +551,29 @@ function userInterface(){
 			else{
 				console.log("Error: Block summoned inside of existing entity.")
 			}
+		}
+	}
+	this.keyDownTrigger = function(){
+		if(this.hoveredElement != this.textFields[this.selectedTextFieldIndex].hoveredElement){
+			this.selectedTextFieldIndex = -1;
+		}
+		//Handling vac
+		function checkAndAddVac(hoveredElement, firstVacIndex, firstHeaderIndex){ //Checks and adds additional vac spots
+			//var firstVacIndex; //Slots vac should be lowered. ui.textFields[t+firstVacIndex] should be x vac[0]
+			//var firstHeaderIndex; //Number of headers above the firstVacIndex
+			var t = findStartIndex(hoveredElement, ui.textFields)+firstVacIndex;
+			var nextT = findStartIndex(hoveredElement+1, ui.textFields);
+			if(ui.textFields[nextT-2].value != "x" || ui.textFields[nextT-1].value != "x"){
+				//Copied from above and modified
+				var nthVac = (nextT - t)/2;
+				var text = " VAC[" + nthVac + "]:";
+				ui.headers[hoveredElement].push("X" + text);
+				ui.headers[hoveredElement].push("Y" + text);
+				//ui.textFields[ui.textFields.length] = new textField([8+widthMultiplierThing*text.length+ui.menuPos[0]+ui.iconDimensions[0]+ui.margin, (ui.margin+ui.iconDimensions[1])*(hoveredElement%100)+ui.menuPos[1]+30*(nextT-2)], hoveredElement, text, {});
+			}
+		}
+		if(this.hoveredElement == 1 || this.hoveredElement == 2){
+			checkAndAddVac(this.hoveredElement, 4, 5);
 		}
 	}
 }
