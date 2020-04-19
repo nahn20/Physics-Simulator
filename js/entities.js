@@ -4,7 +4,7 @@ function basicObject(type="block", pos=[0,0],dim=[10,10],options){
 	this.veloc = [0, 0];
 	this.accel = [0, 0];
 	this.force = [[0], [0]];
-	this.vac = [[]]; //Velocity after collision. Follows format of [v after 1st collision, v after 2nd collision] etc. v formatted as [x, y]. After each collision the array will be shifted up, so vac[0] is always the velocity after the next collision
+	this.vac = [[null, null]]; //Velocity after collision. Follows format of [v after 1st collision, v after 2nd collision] etc. v formatted as [x, y]. After each collision the array will be shifted up, so vac[0] is always the velocity after the next collision
 	//Rotational Stuff\\
 	this.rAngle = 0; //Degrees, sorry. Also positive is clockwise
 	this.rVeloc = 0;
@@ -156,15 +156,19 @@ function basicObject(type="block", pos=[0,0],dim=[10,10],options){
 							var a = {
 								m : this.mass,
 								v : this.veloc[0],
+								vac : this.vac[0][0],
 							}; //Using variable names from my equation, sorry for bad naming convention
 							var b = {
 								m : sim.entities[i].mass,
 								v : sim.entities[i].veloc[0],
+								vac : sim.entities[i].vac[0][0],
 							};
 							var k = this.energyLossCoefficient*sim.entities[i].energyLossCoefficient;
 							vxFinal = this.bigCollisionMomentumEquation(a, b, k);
 							a.v = this.veloc[1];
+							a.vac = this.vac[0][1];
 							b.v = sim.entities[i].veloc[1];
+							b.vac = sim.entities[i].vac[0][1];
 							vyFinal = this.bigCollisionMomentumEquation(a, b, k);
 						}
 						else if(sim.entities[i].infiniteMass){
@@ -190,28 +194,17 @@ function basicObject(type="block", pos=[0,0],dim=[10,10],options){
 							var k = this.energyLossCoefficient*sim.entities[i].energyLossCoefficient;
 							var aStuff = findVelocFromRotation(this, collisionReturns.collisionCoords);
 							var bStuff = findVelocFromRotation(sim.entities[i], collisionReturns.collisionCoords);
-							function formatVac(vac, i){ //Takes the first vector of vac (ex. this.vac[0]). i is which element (0:x, 1:y)
-								var cleanVac = null;
-								if(typeof(vac[i]) != 'undefined'){
-									cleanVac = vac[i];
-								}
-								return cleanVac;
-							}
 							var a = {
 								m : this.density,
 								v : aStuff.x+this.veloc[0],
-								vac : formatVac(this.vac[0], 0),
 							}; //Using variable names from my equation, sorry for bad naming convention
 							var b = {
 								m : sim.entities[i].density,
 								v : bStuff.x+sim.entities[i].veloc[0],
-								vac : formatVac(sim.entities[i].vac[0], 0),
 							}
 							var vx = this.bigCollisionMomentumEquation(a, b, k);
 							a.v = aStuff.y + this.veloc[1];
-							a.vac = formatVac(this.vac[0], 1);
 							b.v = bStuff.y + sim.entities[i].veloc[1];
-							b.vac = formatVac(sim.entities[i].vac[0], 1);
 							var vy = this.bigCollisionMomentumEquation(a, b, k);
 							vx -= this.veloc[0];
 							vy -= this.veloc[1];

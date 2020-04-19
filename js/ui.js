@@ -1,4 +1,10 @@
 const widthMultiplierThing = 9.7; //For 16px
+//Ok I coded this really poorly, and instead of labeling things I put everything in terms of indices. Which makes sense when you're running the code, but if I want to shift something (for example, a button) up or down one, I have to change all references to that index. So here's some impotant ones
+const settingsIndex = 4; //Relating to hoveredElement
+var vacMenu = {
+	firstVacIndex: 4,
+	nthHeader: 5,
+}
 function textField(pos=[0, 0], hoveredElement, inputType, options){
 	this.pos = pos;
 	this.dim = [50, 30];
@@ -86,7 +92,7 @@ function userInterface(){
 	this.textFields = [];
 	this.checkboxFields = [];
 	this.sideMenuDim = [0, 0]; //Increases to meet max
-	this.minSideMenuDim = [200, 500]; //Constant
+	this.minSideMenuDim = [200, 500]; //Constant, except when it's changed for different header amounts
 	this.maxSideMenuDim = [this.minSideMenuDim[0], this.minSideMenuDim[1]]; //Changes based on text field size
 
 	this.scrollPos = 0; //Always positive. 
@@ -99,8 +105,8 @@ function userInterface(){
 	this.headerTypes[0] = ["none", "int", "int", "string"];
 	this.headers[1] = ["Color:", "Mass:", "X Velocity:", "Y Velocity:", "Gravity:", "X VAC[0]:", "Y VAC[0]:"]; //Color must come first
 	this.headerTypes[1] = ["color", "intNullX", "int", "int", "bool", "intNullX", "intNullX"];
-	this.headers[2] = ["Color:", "Mass:", "X Velocity:", "Y Velocity:", "Gravity:"];
-	this.headerTypes[2] = ["color", "intNullX", "int", "int", "bool"];
+	this.headers[2] = ["Color:", "Mass:", "X Velocity:", "Y Velocity:", "Gravity:", "X VAC[0]:", "Y VAC[0]:"];
+	this.headerTypes[2] = ["color", "intNullX", "int", "int", "bool", "intNullX", "intNullX"];
 	this.headers[4] = ["- Settings -", "Background Color:"];
 	this.headerTypes[4] = ["none", "color"];
 	for(var q = 0; q < this.headers.length; q++){
@@ -147,13 +153,13 @@ function userInterface(){
 	}
 	this.drawMenu = function(){
 		//Looking at text field to see what the background color should be
-		var t = findStartIndex(4, ui.textFields); //hoveredElement == 4 used for finding this when you change settings position later
+		var t = findStartIndex(settingsIndex, ui.textFields);
 		this.fillStyle = scrubColor(ui.textFields[t].value);
 		if(this.fillStyle == "Black"){
 			this.fillStyle = "Grey";
 		}
 
-		if(this.menu == 0 && sim.keyMap[16]){ //Not the most intelligent solution to this
+		if(this.menu == 0 && sim.keyMap[16]){ //Developer options using shift. Not the most intelligent solution to this
 			this.menu = 3;
 		}
 		if(this.menu == 3 && !sim.keyMap[16]){
@@ -182,8 +188,21 @@ function userInterface(){
 			}
 			return false;
 		}
+		//Changing menu size based on number of headers
+		if(this.headers[this.hoveredElement] != null){
+			this.maxSideMenuDim[1] = 10+30*this.headers[this.hoveredElement].length;
+			if(this.hoveredElement == 0){
+				this.maxSideMenuDim[1] = 560;
+			}
+			if(this.hoveredElement == settingsIndex){
+				this.maxSideMenuDim[1] += 50; //Room for move button
+			}
+		}
+		else{
+			this.maxSideMenuDim[1] = 500;
+		}
 		const menuSpeedFactor = 5; //bigger = slower
-		if(Math.abs(this.sideMenuDim[0] - this.maxSideMenuDim[0]) > 0.01){
+		if(Math.abs(this.sideMenuDim[0] - this.maxSideMenuDim[0]) > 0.01 || Math.abs(this.sideMenuDim[1] - this.maxSideMenuDim[1]) > 0.01){
 			this.sideMenuDim[0] += (this.maxSideMenuDim[0]-this.sideMenuDim[0])/menuSpeedFactor;
 			this.sideMenuDim[1] += (this.maxSideMenuDim[1]-this.sideMenuDim[1])/menuSpeedFactor;
 		}
@@ -215,6 +234,8 @@ function userInterface(){
 		if(!isHovering){
 			this.hoveredElement = -1;
 		}
+
+
 		if(hasDropdown(this.hoveredElement)){ //ex: 101 for menu 1, 2nd item
 			cvs.ctx.fillStyle = this.fillStyle;
 			cvs.ctx.fillRect(this.menuPos[0]+this.iconDimensions[0]+this.margin/2, (this.iconDimensions[1]+this.margin)*(this.hoveredElement%100)+this.menuPos[1]-this.margin/2, this.sideMenuDim[0], this.sideMenuDim[1]);
@@ -283,7 +304,7 @@ function userInterface(){
 
 					}
 				}
-				if(this.hoveredElement == 4){
+				if(this.hoveredElement == settingsIndex){
 					var shift = [0, 80];
 					this.drawImage(shift[0]+this.sideMenuDim[0]-(this.iconDimensions[0]+this.margin)+this.menuPos[0]+this.iconDimensions[0]+this.margin, shift[1]+(this.margin+this.iconDimensions[1])*(this.hoveredElement%100)+this.menuPos[1], this.iconDimensions, "images/icons/move.png");
 				}
@@ -343,8 +364,7 @@ function userInterface(){
 			if(this.menuPos[0] < -this.iconDimensions[0]/2){
 				this.menuPos[0] = -this.iconDimensions[0]/2;
 			}
-			var settingsHoveredElementIndex = 4; //this.hoveredElement == 4. Look here when you're replacing the position of settings. Need to change that first constant
-			var yLimit = -(settingsHoveredElementIndex*(this.iconDimensions[1]+this.margin)+this.iconDimensions[1]/2); //Making it so the settings icon can't go completely off screen
+			var yLimit = -(settingsIndex*(this.iconDimensions[1]+this.margin)+this.iconDimensions[1]/2); //Making it so the settings icon can't go completely off screen
 			if(this.menuPos[1] < yLimit){
 				this.menuPos[1] = yLimit;
 			}
@@ -465,7 +485,7 @@ function userInterface(){
 		}
 	}
 	this.mouseDownTrigger = function(){
-		if(this.hoveredElement == 4){
+		if(this.hoveredElement == settingsIndex){
 			var shift = [0, 80]; //Same as the other shift
 			var moveButtonX = this.sideMenuDim[0]-(this.iconDimensions[0]+this.margin)+this.menuPos[0]+this.iconDimensions[0]+this.margin+shift[0];
 			var moveButtonY = (this.margin+this.iconDimensions[1])*(this.hoveredElement%100)+this.menuPos[1]+shift[1];
@@ -487,6 +507,32 @@ function userInterface(){
 				y = (this.selectionCoordsB[1]-sim.cameras[i].screenPos[1])/sim.cameras[i].sizeMultiplier + sim.cameras[i].pos[1];
 				selectionInEngineB = [x, y];
 			}
+		}
+		function getVac(hoveredElement){ //Handling reading of vac and translating it. TODO: You fucked this up and vac isn't transferring over
+			var vac = [];
+			var tVacStart = findStartIndex(hoveredElement, ui.textFields)+vacMenu.firstVacIndex;
+			var tVacEnd = findEndIndex(hoveredElement, ui.textFields);
+			for(var i = tVacStart; i <= tVacEnd; i+=2){
+				var vacX = ui.textFields[i].value;
+				var vacY = ui.textFields[i+1].value;
+				if(vacX == "x"){
+					vacX = null;
+				}
+				else{
+					vacX = parseInt(vacX)
+				}
+				if(vacY == "x"){
+					vacY = null;
+				}
+				else{
+					vacY = parseInt(vacY);
+				}
+				vac.push([vacX, vacY]);
+				if(vacX == null && vacY == null){
+					break;
+				}
+			}
+			return vac;
 		}
 		if(this.selectionType == "block"){ //summons block
 			var dim = [selectionInEngineB[0]-selectionInEngineA[0], selectionInEngineB[1]-selectionInEngineA[1]];
@@ -510,8 +556,9 @@ function userInterface(){
 			var mass = parseInt(ui.textFields[t+1].value);
 			if(ui.textFields[t+1].value == "x"){mass=0;}
 			var initialVeloc = [parseInt(ui.textFields[t+2].value), -parseInt(ui.textFields[t+3].value)];
+			var vac = getVac(1);
 
-			var rect = new basicObject("block", selectionInEngineA, dim, {color:color, gravity:gravity, mass:mass, initialVeloc:initialVeloc});
+			var rect = new basicObject("block", selectionInEngineA, dim, {color:color, gravity:gravity, mass:mass, initialVeloc:initialVeloc, vac:vac});
 			var collidingWithAnything = false;
 			for(var i = 0; i < sim.entities.length; i++){
 				if(isCollision(0, sim.entities[i], rect).both){
@@ -536,8 +583,9 @@ function userInterface(){
 			var mass = parseInt(ui.textFields[t+1].value);
 			if(ui.textFields[t+1].value == "x"){mass=0;}
 			var initialVeloc = [parseInt(ui.textFields[t+2].value), -parseInt(ui.textFields[t+3].value)];
+			var vac = getVac(2);
 
-			var circ = new basicObject("circle", selectionInEngineA, dim, {color:color, gravity:gravity, mass:mass, initialVeloc:initialVeloc});
+			var circ = new basicObject("circle", selectionInEngineA, dim, {color:color, gravity:gravity, mass:mass, initialVeloc:initialVeloc, vac:vac});
 			var collidingWithAnything = false;
 			for(var i = 0; i < sim.entities.length; i++){
 				if(isCollision(0, sim.entities[i], circ).both){
@@ -558,22 +606,33 @@ function userInterface(){
 			this.selectedTextFieldIndex = -1;
 		}
 		//Handling vac
-		function checkAndAddVac(hoveredElement, firstVacIndex, firstHeaderIndex){ //Checks and adds additional vac spots
+		function checkAndAddVac(hoveredElement, firstVacIndex, nthHeader){ //Checks and adds additional vac spots
 			//var firstVacIndex; //Slots vac should be lowered. ui.textFields[t+firstVacIndex] should be x vac[0]
-			//var firstHeaderIndex; //Number of headers above the firstVacIndex
 			var t = findStartIndex(hoveredElement, ui.textFields)+firstVacIndex;
-			var nextT = findStartIndex(hoveredElement+1, ui.textFields);
-			if(ui.textFields[nextT-2].value != "x" || ui.textFields[nextT-1].value != "x"){
+			var endT = findEndIndex(hoveredElement, ui.textFields);
+			var nthVac = (1+endT - t)/2;
+			var text = " VAC[" + nthVac + "]:";
+			if(ui.textFields[endT-1].value != "x" || ui.textFields[endT].value != "x"){
 				//Copied from above and modified
-				var nthVac = (nextT - t)/2;
-				var text = " VAC[" + nthVac + "]:";
-				ui.headers[hoveredElement].push("X" + text);
-				ui.headers[hoveredElement].push("Y" + text);
-				//ui.textFields[ui.textFields.length] = new textField([8+widthMultiplierThing*text.length+ui.menuPos[0]+ui.iconDimensions[0]+ui.margin, (ui.margin+ui.iconDimensions[1])*(hoveredElement%100)+ui.menuPos[1]+30*(nextT-2)], hoveredElement, text, {});
+				if(nthVac <= 5){ //Max number you can fit in the textbox without overflowing. I'm NOT adding a scroll bar. Honestly, I don't think anyone will need more than 2 of these ever.
+					ui.headers[hoveredElement].push("X" + text); //Note: these headers are out of the conventional order. It shouldn't matter, since I never use header order for anything (I don't think)
+					ui.headers[hoveredElement].push("Y" + text);
+					for(var i = 0; i < 2; i++){
+						var newTF = new textField([8+widthMultiplierThing*("X" + text).length+ui.menuPos[0]+ui.iconDimensions[0]+ui.margin, (ui.margin+ui.iconDimensions[1])*(hoveredElement%100)+ui.menuPos[1]+30*(i+nthHeader+2*nthVac)], hoveredElement, "intNullX", {});
+						ui.textFields.splice(i+endT+1, 0, newTF);
+					}
+				}
+			}
+			if(nthVac > 0){
+				if(ui.textFields[endT-3].value == "x" && ui.textFields[endT-2].value == "x"){
+					ui.textFields.splice(endT-1, 2);
+					//Removes the end two headers in hoveredElement
+					ui.headers[hoveredElement].splice(-2, 2);
+				}
 			}
 		}
 		if(this.hoveredElement == 1 || this.hoveredElement == 2){
-			checkAndAddVac(this.hoveredElement, 4, 5);
+			checkAndAddVac(this.hoveredElement, vacMenu.firstVacIndex, vacMenu.nthHeader);
 		}
 	}
 }
@@ -590,5 +649,16 @@ function findStartIndex(hoveredElement, fields){ //Used for finding the beginnin
 	}
 	else{
 		console.log("ERROR: Looking for hoveredElement start index that does not exist");
+	}
+}
+function findEndIndex(hoveredElement, fields){ //Used for finding end of field arrays because I still coded this in a convoluted and stupid way
+	var startIndex = findStartIndex(hoveredElement, fields);
+	for(var i = startIndex; i < fields.length; i++){
+		if(fields[i].hoveredElement != hoveredElement){
+			return i-1;
+		}
+		if(i == fields.length-1){
+			return i;
+		}
 	}
 }

@@ -24,12 +24,14 @@ function engine(){
 			this.entities[i].updatePos();
 		}
 		for(var i = 0; i < this.entities.length; i++){
-			if(this.entities[i].collidedThisTick){
+			if(this.entities[i].collidedThisTick){ //TODO: Fix multiple vac collisions
+				console.log("HIY")
 				var newVac = [];
-				for(var q = 1; q < this.entities[i].vac.length; q++){
+				for(var q = 1; q < this.entities[i].vac.length+1; q++){
 					newVac[q-1] = this.entities[i].vac[q];
 				}
 			}
+			this.entities[i].collidedThisTick = false;
 		}
 	}
 	this.drawLoop = function(){
@@ -131,9 +133,9 @@ function startEngine(){
 	sim.entities.push(new basicObject("block", [2000, 0], [50, 1050], {gravity:false, infiniteMass:true}));
 	sim.entities.push(new basicObject("block", [500, 500], [50, 50], {gravity:false, initialVeloc: [10, 5]}));
 	*/
-
-	sim.entities = constructEntitiesFromString(presets[0].simText);
-	sim.cameras = constructCamerasFromString(presets[0].camText);
+	var preset = 9; //Look here to change default preset
+	sim.entities = constructEntitiesFromString(presets[preset].simText);
+	sim.cameras = constructCamerasFromString(presets[preset].camText);
 	// sim.entities = constructEntitiesFromString(presets[presets.length-1].simText);
 	// sim.cameras = constructCamerasFromString(presets[presets.length-1].camText);
 
@@ -153,8 +155,8 @@ function startEngine(){
 		if(ui.selectedTextFieldIndex == -1){ //Means no text box is selected
 			sim.keyMap[event.keyCode] = true;
 			if(event.keyCode == 80){ //p
-				var a = sim.selection[0];
-				var b = sim.selection[1];
+				var a = sim.entities[sim.selection[0]];
+				var b = sim.entities[sim.selection[1]];
 				if(a != null && b == null){
 					console.log("Selection 1 Momentum \nX: " + a.mass*a.veloc[0] + "\nY: " + a.mass*a.veloc[1]);
 				}
@@ -166,8 +168,8 @@ function startEngine(){
 				}
 			}
 			if(event.keyCode == 74){ //j
-				var a = sim.selection[0];
-				var b = sim.selection[1];
+				var a = sim.entities[sim.selection[0]];
+				var b = sim.entities[sim.selection[1]];
 				if(a != null && b == null){
 					console.log("Selection 1 Kinetic Energy: " + a.mass*Math.pow(findMag(a.veloc), 2));
 				}
@@ -194,11 +196,16 @@ function startEngine(){
 		}
 		else{
 			var selectedField = ui.textFields[ui.selectedTextFieldIndex];
-			if((selectedField.inputType == "int" || selectedField.inputType == "intNullX") && event.keyCode >= 48 && event.keyCode <= 57 || event.keyCode == 32){
+			if((selectedField.inputType == "int" || selectedField.inputType == "intNullX") && ((event.keyCode >= 48 && event.keyCode <= 57) || event.keyCode == 189)){
 				if(selectedField.value == "0" || selectedField.value == "x"){
 					selectedField.value = "";
 				}
-				selectedField.value += String.fromCharCode(event.keyCode);
+				if(event.keyCode == 189 && selectedField.value == ""){ //Minus be wack
+					selectedField.value += "-";
+				}
+				else{
+					selectedField.value += String.fromCharCode(event.keyCode);
+				}
 			}
 			if(selectedField.inputType == "color" && event.keyCode >= 65 && event.keyCode <= 90){
 				if(selectedField.value.length == 0){
