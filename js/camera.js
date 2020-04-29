@@ -275,7 +275,6 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
 				textSize: textSizeMultiplier*16,
 				x: x,
 				y: y+(verticalMarginsBase+(i+0.5)*verticalLineSpacingBase)*textSizeMultiplier,
-				color: "white",
 			}
 			this.drawText(text);
 		}
