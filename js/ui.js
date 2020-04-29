@@ -173,7 +173,7 @@ function userInterface(){
 			sourceArray = ["images/icons/x.png"];
 		}
 		if(this.menu == 2){
-			sourceArray = ["images/icons/x.png", "images/icons/circle3.png"];
+			sourceArray = ["images/icons/x.png"];
 		}
 		if(this.menu == 3){
 			sourceArray = ["images/icons/save.png", "images/icons/saveButRed.png", "images/icons/saveButPurple.png", "images/icons/load.png"];

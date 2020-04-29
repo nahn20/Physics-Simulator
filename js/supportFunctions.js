@@ -131,6 +131,13 @@ function aSimB(a, b){ //Compares two words a and b to see how similar they are
 	sim /= a.length;
 	return sim;
 }
+function shiftArrayUp(array){ //Shifts array up one (1 becomes 0, 2 becomes 1, last element is eliminated)
+	var newArray = [];
+	for(var q = 1; q < array.length; q++){
+		newArray[q-1] = array[q];
+	}
+	return newArray;
+}
 var patterns = {
 	smiley : new Image(),
 }

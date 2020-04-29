@@ -31,6 +31,7 @@ function basicObject(type="block", pos=[0,0],dim=[10,10],options){
 	this.displayNumCollision = false;
 	this.pointMass = true;
 	this.collidedThisTick = false;
+	this.displayParameters = true;
 	if(typeof(options.vac) != 'undefined'){
 		this.vac = options.vac;
 	}

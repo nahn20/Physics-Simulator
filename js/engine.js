@@ -25,11 +25,10 @@ function engine(){
 		}
 		for(var i = 0; i < this.entities.length; i++){
 			if(this.entities[i].collidedThisTick){ //TODO: Fix multiple vac collisions
-				console.log("HIY")
-				var newVac = [];
-				for(var q = 1; q < this.entities[i].vac.length+1; q++){
-					newVac[q-1] = this.entities[i].vac[q];
-				}
+				this.entities[i].vac = shiftArrayUp(this.entities[i].vac);
+			}
+			if(this.entities[i].vac = []){
+				this.entities[i].vac = [[null, null]];
 			}
 			this.entities[i].collidedThisTick = false;
 		}

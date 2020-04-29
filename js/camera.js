@@ -35,7 +35,10 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
             switch(obj.type){
                 case "block":
 					thisCam.drawRect(obj);
-					if(obj.displayNumCollision){
+					if(obj.displayParameters){
+						thisCam.drawParameters(obj);
+					}
+					if(obj.displayNumCollision){ //Migrate into drawParameters at some point
 						var display = {
 							text : obj.collisionCounter,
 							textSize: 100,
@@ -47,6 +50,9 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
 					break;
 				case "circle":
 					thisCam.drawCircle(obj);
+					if(obj.displayParameters){
+						thisCam.drawParameters(obj);
+					}
 				case "spring":
 					thisCam.drawSpring(obj);
 					break;
@@ -101,8 +107,7 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
     this.boarder = function(){
         this.overlayRect(0, 0, this.dim[0], this.dim[1], {color: "black", fill: false})
     }
-    this.drawRect = function(obj){
-        //if(this.onScreen(obj.pos[0], obj.pos[1], obj.dim[0], obj.dim[1])){
+    this.drawRect = function(obj){ //obj requires pos[x, y] and dim[x, y]
 		var color = "black";
 		var fill = false;
 		if(typeof(obj.color) != 'undefined'){
@@ -233,11 +238,29 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
             cvs.ctx.clip();
 
             cvs.ctx.fillStyle = color;
-            cvs.ctx.textAlign = textAlign;
-			cvs.ctx.font = this.sizeMultiplier*textSize + "px Arial";
+			cvs.ctx.textAlign = textAlign;
+			cvs.ctx.font = this.sizeMultiplier*textSize + "px Courier New";
             cvs.ctx.fillText(text, this.screenPos[0]+this.sizeMultiplier*(obj.x - this.pos[0]), this.screenPos[1]+this.sizeMultiplier*(obj.y - this.pos[1])); 
         cvs.ctx.restore();
-    }
+	}
+	this.drawParameters = function(obj){
+		var dim = [50, 50];
+		var objCenterX;
+		var objBottomY;
+		if(obj.type == "block"){
+			objCenterX = obj.pos[0]+obj.dim[0]/2;
+			objBottomY = obj.pos[1]+obj.dim[1];
+		}
+		if(obj.type == "circle"){
+			objCenterX = obj.pos[0];
+			objBottomY = obj.pos[1]+obj.dim[0];
+		}
+		var borderRect = { //Make this have color diluted from obj
+			pos: [objCenterX-dim[0]/2, objBottomY],
+			dim:dim,
+		}
+		this.drawRect(borderRect);
+	}
     this.overlayRect = function(x, y, width, height, options){
         color = "black";
         fill = false;
