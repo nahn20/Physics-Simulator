@@ -1,3 +1,4 @@
+const selectionColorIndex = ["blue", "red", "green", "yellow", "purple", "pink", "teal", "orange", "#D2B4DE"];
 var toDraw = [];
 /*
 var pointToDraw = {
@@ -68,6 +69,7 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
                     break;
             }
 		}
+		this.connectingParametersWeb();
         for(var i = 0; i < sim.entities.length; i++){ //Drawing all entities
 			caseDraw(sim.entities[i], this);
 			if(sim.entities[i].autoReturnColor != false){ //Returns objects to default color. Gets rid of flickering issue with desynced ticks.
@@ -92,8 +94,7 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
 				copy.pos[1] += copy.lineWidth;
 				copy.dim[0] -= 2*copy.lineWidth;
 				copy.dim[1] -= 2*copy.lineWidth;
-				var colorIndex = ["blue", "red", "green", "yellow", "purple", "pink", "teal", "orange", "#D2B4DE"];
-				copy.color = colorIndex[i];
+				copy.color = selectionColorIndex[i];
 				caseDraw(copy, this);
 			}
 		}
@@ -201,21 +202,21 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
 		}
     }
     this.drawLine = function(startx, starty, endx, endy, color="black"){
-        if(this.onScreen(startx, starty, endx-startx, endy-starty)){
-            cvs.ctx.save();
-                cvs.ctx.beginPath();
-                cvs.ctx.rect(this.screenPos[0], this.screenPos[1], this.dim[0], this.dim[1]);
-                cvs.ctx.clip();
+        //if(this.onScreen(startx, starty, endx-startx, endy-starty)){ //Issue of removing entire line if endpt is cut off
+		cvs.ctx.save();
+			cvs.ctx.beginPath();
+			cvs.ctx.rect(this.screenPos[0], this.screenPos[1], this.dim[0], this.dim[1]);
+			cvs.ctx.clip();
 
-                cvs.ctx.beginPath();
-                cvs.ctx.strokeStyle=color;
-                cvs.ctx.moveTo(this.screenPos[0]+this.sizeMultiplier*(startx - this.pos[0]), this.screenPos[1]+this.sizeMultiplier*(starty - this.pos[1]));
-                cvs.ctx.lineTo(this.screenPos[0]+this.sizeMultiplier*(endx - this.pos[0]), this.screenPos[1]+this.sizeMultiplier*(endy - this.pos[1]));
-                cvs.ctx.stroke();
-            cvs.ctx.restore();
-        }
+			cvs.ctx.beginPath();
+			cvs.ctx.moveTo(this.screenPos[0]+this.sizeMultiplier*(startx - this.pos[0]), this.screenPos[1]+this.sizeMultiplier*(starty - this.pos[1]));
+			cvs.ctx.lineTo(this.screenPos[0]+this.sizeMultiplier*(endx - this.pos[0]), this.screenPos[1]+this.sizeMultiplier*(endy - this.pos[1]));
+			cvs.ctx.strokeStyle=color;
+			cvs.ctx.stroke();
+		cvs.ctx.restore();
+        //}
     }
-    this.drawText = function(obj){
+    this.drawText = function(obj){ //Needs text, x and y
         var text = "Filler Text";
         var textSize = 16;
         var color = "black";
@@ -243,8 +244,47 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
             cvs.ctx.fillText(text, this.screenPos[0]+this.sizeMultiplier*(obj.x - this.pos[0]), this.screenPos[1]+this.sizeMultiplier*(obj.y - this.pos[1])); 
         cvs.ctx.restore();
 	}
+	this.drawParametersBoxGeneral = function(texts, x, y, color){ //Draws a general parameters box based on x (which is center x of box) and y (which is top y). Width and height are auto calculated
+		var dim = [0, 0];
+		const textSizeMultiplier = 2;
+		const verticalMarginsBase = 6; //Base value for top and bottom margins on text
+		const verticalLineSpacingBase = 16; //Base value for space between lines of text
+		var longestLine = ""; //Longest line of all the texts
+		for(var i = 0; i < texts.length; i++){
+			if(texts[i].length > longestLine.length){
+				longestLine = texts[i];
+			}
+		}
+		dim[0] = textSizeMultiplier*(10+widthMultiplierThing*longestLine.length);
+		dim[1] = (verticalMarginsBase+texts.length*verticalLineSpacingBase)*textSizeMultiplier;
+
+		var borderRect = { //Make this have color diluted from obj
+			pos: [x-dim[0]/2, y],
+			dim:dim,
+			color:color,
+			fill:true,
+		}
+		cvs.ctx.save();
+		cvs.ctx.globalAlpha = 0.3; //Changing alpha of the drawn box only
+		this.drawRect(borderRect);
+		cvs.ctx.restore();
+		//Draws all of the texts
+		for(var i = 0; i < texts.length; i++){
+			var text = {
+				text: texts[i],
+				textSize: textSizeMultiplier*16,
+				x: x,
+				y: y+(verticalMarginsBase+(i+0.5)*verticalLineSpacingBase)*textSizeMultiplier,
+				color: "white",
+			}
+			this.drawText(text);
+		}
+	}
 	this.drawParameters = function(obj){
-		var dim = [50, 50];
+		var texts = [];
+		texts[0] = "mass: " + abbreviateNum(obj.mass, 5);
+		texts[1] = "vx: " + abbreviateNum(obj.veloc[0], 3);
+		texts[2] = "vy: " + abbreviateNum(obj.veloc[1], 3);
 		var objCenterX;
 		var objBottomY;
 		if(obj.type == "block"){
@@ -255,11 +295,63 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
 			objCenterX = obj.pos[0];
 			objBottomY = obj.pos[1]+obj.dim[0];
 		}
-		var borderRect = { //Make this have color diluted from obj
-			pos: [objCenterX-dim[0]/2, objBottomY],
-			dim:dim,
+		this.drawParametersBoxGeneral(texts, objCenterX, objBottomY, obj.color);
+	}
+	this.connectingParametersWeb = function(){ //Draws a web connecting all the selected objects and a parameters box for combined momentum and kinetic energy or such
+		var texts = [];
+		texts[0] = "px: ";
+		texts[1] = "py: ";
+		texts[2] = "KE: ";
+		var params = [0, 0, 0];
+		var sumPos = [0, 0];
+		var numSelection = 0;
+		for(var i = 0; i < sim.selection.length; i++){
+			if(sim.selection[i] != null){
+				numSelection++;
+				var obj = sim.entities[sim.selection[i]];
+				if(obj.type == "block"){
+					sumPos[0] += obj.pos[0]+obj.dim[0]/2;
+					sumPos[1] += obj.pos[1]+obj.dim[1]/2;
+				}
+				if(obj.type == "circle"){
+					sumPos[0] += obj.pos[0];
+					sumPos[1] += obj.pos[1];
+				}
+				params[0] += obj.mass*obj.veloc[0]; //x momentum
+				params[1] += obj.mass*obj.veloc[1]; //y momentum
+				params[2] += obj.mass*(obj.veloc[0]*obj.veloc[0]+obj.veloc[1]*obj.veloc[1]); //I think this is how you calculate total KE? I'm too lazy to check
+			}
 		}
-		this.drawRect(borderRect);
+		if(numSelection >= 2){ //Only draws stuff if there's multiple things selected
+			//Updating text
+			for(var i = 0; i < texts.length; i++){
+				texts[i] += abbreviateNum(params[i], 3);
+			}
+			//Drawing box
+			var avgPos = [];
+			avgPos[0] = sumPos[0]/numSelection;
+			avgPos[1] = sumPos[1]/numSelection;
+			this.drawParametersBoxGeneral(texts, avgPos[0], avgPos[1], "black");
+			//Now draws the connecting lines
+			cvs.ctx.save();
+			cvs.ctx.globalAlpha = 1; //Changing alpha of the lines
+			for(var i = 0; i < sim.selection.length; i++){
+				if(sim.selection[i] != null){
+					var obj = sim.entities[sim.selection[i]];
+					var pt = []; //First connecting point for the line. Second is avgPos[]
+					if(obj.type == "block"){
+						pt[0] = obj.pos[0]+obj.dim[0]/2;
+						pt[1] = obj.pos[1]+obj.dim[1]/2;
+					}
+					if(obj.type == "circle"){
+						pt[0] = obj.pos[0];
+						pt[1] = obj.pos[1];
+					}
+					this.drawLine(pt[0], pt[1], avgPos[0], avgPos[1], selectionColorIndex[i]);
+				}
+			}
+			cvs.ctx.restore();
+		}
 	}
     this.overlayRect = function(x, y, width, height, options){
         color = "black";

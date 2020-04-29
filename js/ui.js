@@ -508,7 +508,7 @@ function userInterface(){
 				selectionInEngineB = [x, y];
 			}
 		}
-		function getVac(hoveredElement){ //Handling reading of vac and translating it. TODO: You fucked this up and vac isn't transferring over
+		function getVac(hoveredElement){ //Handling reading of vac and translating it.
 			var vac = [];
 			var tVacStart = findStartIndex(hoveredElement, ui.textFields)+vacMenu.firstVacIndex;
 			var tVacEnd = findEndIndex(hoveredElement, ui.textFields);

@@ -142,3 +142,16 @@ var patterns = {
 	smiley : new Image(),
 }
 patterns.smiley.src = "images/patterns/smiley.png";
+function abbreviateNum(num, lim){ //Lim is maximum number of digits it should be
+	if(typeof(num) != 'undefined' && num != null){
+		if(num.toString().length > lim){
+			var digitsBeforeDecimal = Math.round(num).toString().length;
+			var digitsAfterDecimalToKeep = Math.pow(10,lim-digitsBeforeDecimal)
+			num = Math.round(digitsAfterDecimalToKeep*num)/digitsAfterDecimalToKeep;
+		}
+		if((num > Math.pow(10, lim) || num < Math.pow(10, -lim)) && num != 0){
+			num = num.toExponential();
+		}
+	}
+	return num;
+}
