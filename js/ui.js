@@ -94,21 +94,28 @@ function userInterface(){
 	this.sideMenuDim = [0, 0]; //Increases to meet max
 	this.minSideMenuDim = [200, 500]; //Constant, except when it's changed for different header amounts
 	this.maxSideMenuDim = [this.minSideMenuDim[0], this.minSideMenuDim[1]]; //Changes based on text field size
+	this.hoverText = "";
+	this.ticksSinceLastMove = 0;
 
 	this.scrollPos = 0; //Always positive. 
 	this.moveDrag = false;
 	//Creating text fields
 	this.headers = [[]];
 	this.headerTypes = [[]]; //I'm so sorry this is getting convoluted
+	this.headerDescriptions = [[]];
 	this.defaultValues = [[]]; //This is so much worse
 	this.headers[0] = ["- Preset Search -", "Chapter:", "Problem:", "Tags:"];
+	this.headerDescriptions[0] = ["Search for premade simulations. Click on a thumbnail to load the preset", "Search by chapter number", "Search by problem number", "Search by topic, ex: momentum, projectile"]
 	this.headerTypes[0] = ["none", "int", "int", "string"];
 	this.headers[1] = ["Color:", "Mass:", "X Velocity:", "Y Velocity:", "Gravity:", "X VAC[0]:", "Y VAC[0]:"]; //Color must come first
 	this.headerTypes[1] = ["color", "intNullX", "int", "int", "bool", "intNullX", "intNullX"];
+	this.headerDescriptions[1] = ["Color for created block", "Mass of created block", "Velocity in the x direction", "Velocity in the y direction", "Enable gravity for the block", "Velocity after the 1st collision in the x-direction", "Velocity after the 1st collision in the y-direction", "Velocity after the 2nd collision in the x-direction", "Velocity after the 2nd collision in the y-direction", "Velocity after the 3rd collision in the x-direction", "Velocity after the 3rd collision in the y-direction", "Velocity after the 4th collision in the x-direction", "Velocity after the 4th collision in the y-direction", "Velocity after the 5th collision in the x-direction", "Velocity after the 5th collision in the y-direction"];
 	this.headers[2] = ["Color:", "Mass:", "X Velocity:", "Y Velocity:", "Gravity:", "X VAC[0]:", "Y VAC[0]:"];
 	this.headerTypes[2] = ["color", "intNullX", "int", "int", "bool", "intNullX", "intNullX"];
-	this.headers[4] = ["- Settings -", "Background Color:"];
-	this.headerTypes[4] = ["none", "color"];
+	this.headerDescriptions[2] = ["Color for created block", "Mass of created block", "Velocity in the x direction", "Velocity in the y direction", "Enable gravity for the block", "Velocity after the 1st collision in the x-direction", "Velocity after the 1st collision in the y-direction", "Velocity after the 2nd collision in the x-direction", "Velocity after the 2nd collision in the y-direction", "Velocity after the 3rd collision in the x-direction", "Velocity after the 3rd collision in the y-direction", "Velocity after the 4th collision in the x-direction", "Velocity after the 4th collision in the y-direction", "Velocity after the 5th collision in the x-direction", "Velocity after the 5th collision in the y-direction"];
+	this.headers[settingsIndex] = ["- Settings -", "Background Color:", "Show Parameters", "Parameters Size"];
+	this.headerTypes[settingsIndex] = ["none", "color", "bool", "int"];
+	this.headerDescriptions[settingsIndex] = ["Settings for the simulator and UI", "Background color for the user interface", "Shows the properties of all blocks on the screen", "Modifies the size of the boxes showing block properties"]
 	for(var q = 0; q < this.headers.length; q++){
 		if(this.headers[q] != null && this.headerTypes[q] != null){ //Idk if this works. Issue of if you use this.headers[100]
 			for(var i = 0; i < this.headers[q].length; i++){
@@ -121,7 +128,10 @@ function userInterface(){
 			}
 		}
 	}
-	this.textFields[findStartIndex(4, this.textFields)].value = "Grey"; //Sets background color and changes the text value
+	var t = findStartIndex(settingsIndex, this.textFields);
+	this.textFields[t].value = "Grey"; //Sets background color and changes the text value
+	this.textFields[t+1].value = "2";
+	this.checkboxFields[findStartIndex(settingsIndex, this.checkboxFields)].value = true;
 	// for(var i = 0; i < this.headers[0].length; i++){
 	// 	this.textFields[this.textFields.length] = new textField([widthMultiplierThing*this.headers[0][i].length+this.menuPos[0]+this.iconDimensions[0]+this.margin, this.menuPos[1]+30*i], 0, {});
 	// }
@@ -150,6 +160,7 @@ function userInterface(){
 			cvs.ctx.rect(this.textFields[this.selectedTextFieldIndex].pos[0], this.textFields[this.selectedTextFieldIndex].pos[1], this.textFields[this.selectedTextFieldIndex].dim[0], this.textFields[this.selectedTextFieldIndex].dim[1]);
 			cvs.ctx.stroke();
 		}
+		this.drawHover();
 	}
 	this.drawMenu = function(){
 		//Looking at text field to see what the background color should be
@@ -159,10 +170,10 @@ function userInterface(){
 			this.fillStyle = "Grey";
 		}
 
-		if(this.menu == 0 && sim.keyMap[16]){ //Developer options using shift. Not the most intelligent solution to this
+		if(this.menu == 0 && sim.keyMap[9]){ //Developer options using tab. Not the most intelligent solution to this
 			this.menu = 3;
 		}
-		if(this.menu == 3 && !sim.keyMap[16]){
+		if(this.menu == 3 && !sim.keyMap[9]){
 			this.menu = 0;
 		}
 		var sourceArray = [];
@@ -257,7 +268,7 @@ function userInterface(){
 			cvs.ctx.rect(ui.menuPos[0]+ui.iconDimensions[0]+ui.margin/2, -10+0.55*30+30*this.headers[this.hoveredElement].length+(ui.iconDimensions[1]+ui.margin)*(ui.hoveredElement%100)+ui.menuPos[1]-ui.margin/2, ui.sideMenuDim[0], ui.sideMenuDim[1]-(-10+0.55*30+30*this.headers[this.hoveredElement].length));
 			cvs.ctx.clip();
 			{
-				if(this.hoveredElement == 0){
+				if(this.hoveredElement == 0){ //Handles search and scrolling
 					var dim = [100, 50];
 					var numPerRow = Math.floor(this.maxSideMenuDim[0]/(dim[0]+20)); //Added constant makes it comfier - more space between tight images
 					var numPerColumn = 7;
@@ -356,7 +367,24 @@ function userInterface(){
 			}
 		}
 	}
+	this.drawHover = function(){
+		const startShowingHover = 50; //Measured in ticks
+		if(this.hoverText != "" && this.ticksSinceLastMove > startShowingHover){
+			var x = this.mousePos[0]+10;
+			var y = this.mousePos[1]+10;
+			cvs.ctx.save();
+			cvs.ctx.globalAlpha = Math.min((this.ticksSinceLastMove-startShowingHover)/40, 1);
+			cvs.ctx.fillStyle = "#ffffb3";
+			cvs.ctx.fillRect(x, y, this.hoverText.length*widthMultiplierThing+2.5, 18);
+			cvs.ctx.textAlign = "left";
+			cvs.ctx.font = "16px Courier New";
+			cvs.ctx.fillStyle = "black";
+			cvs.ctx.fillText(this.hoverText, x+2.5, y+12.5);
+			cvs.ctx.restore();
+		}
+	}
 	this.mouseMoveTrigger = function(newMousePos){
+		this.ticksSinceLastMove = 0;
 		if(this.moveDrag){ //Uses where the mouse WAS relative to menu coords, then updates menu coords to have same displacement from the new mouse pos
 			var oldMenuPos = this.menuPos;
 			var displacement = [oldMenuPos[0]-this.mousePos[0], oldMenuPos[1]-this.mousePos[1]];
@@ -379,6 +407,48 @@ function userInterface(){
 			}
 		}
 		this.mousePos = newMousePos;
+
+		//Checks and updates hover info
+		if(this.hoveredElement != -1){
+			var foundDescription = false;
+			if(this.headers[this.hoveredElement] != null && this.headerTypes[this.hoveredElement] != null){
+				for(var i = 0; i < this.headers[this.hoveredElement].length; i++){ //Scans through text headers
+					var minX = this.menuPos[0]+this.iconDimensions[0]+this.margin;
+					var minY = 0.55*30+(this.margin+this.iconDimensions[1])*(this.hoveredElement%100)+this.menuPos[1]+30*i-15;
+					var width = this.sideMenuDim[0];
+					var height = 30;
+					if(this.mousePos[0] > minX && this.mousePos[0] < minX+width && this.mousePos[1] > minY && this.mousePos[1] < minY+height){
+						this.hoverText = this.headerDescriptions[this.hoveredElement][i];
+						foundDescription = true;
+						break;
+					}
+				}
+			}
+			if(!foundDescription){ //If you're hovered over an element but not over one of the text fields
+				var iconDescriptions = [];
+				iconDescriptions[0] = this.headerDescriptions[0][0];
+				iconDescriptions[1] = "Click to enable block creation mode. Drag and drop in the simulation to create block";
+				iconDescriptions[2] = "Click to enable circle-block creation mode. Drag and drop in the simulation to create circle-block";
+				iconDescriptions[3] = "Take and download a screenshot of the simulator without the user interface";
+				iconDescriptions[4] = this.headerDescriptions[4][0];
+				iconDescriptions[100] = "Delete selected block"
+				iconDescriptions[200] = "Delete selected blocks"
+				iconDescriptions[300] = "Developer tool: Copies entity text string"
+				iconDescriptions[301] = "Developer tool: Copies camera text string"
+				iconDescriptions[302] = "Developer tool: Copies combined entity and camera text string"
+				iconDescriptions[303] = "Developer tool: Loads a specific preset"
+
+				if(iconDescriptions[this.hoveredElement] == null){
+					this.hoverText = "";
+				}
+				else{
+					this.hoverText = iconDescriptions[this.hoveredElement];
+				}
+			}
+		}
+		else{
+			this.hoverText = "";
+		}
 	}
 	this.clickTrigger = function(){
 		//Deals with menu selection
@@ -411,6 +481,7 @@ function userInterface(){
 					sim.selection[i] = null;
 				}
 			}
+			this.hoveredElement = -1;
 		}
 		if(this.hoveredElement == 0){ //Preset seleciton. Copied from line 219
 			var dim = [100, 50];
@@ -508,6 +579,7 @@ function userInterface(){
 				selectionInEngineB = [x, y];
 			}
 		}
+
 		function getVac(hoveredElement){ //Handling reading of vac and translating it.
 			var vac = [];
 			var tVacStart = findStartIndex(hoveredElement, ui.textFields)+vacMenu.firstVacIndex;
@@ -519,13 +591,13 @@ function userInterface(){
 					vacX = null;
 				}
 				else{
-					vacX = parseInt(vacX)
+					vacX = parseFloat(vacX)
 				}
 				if(vacY == "x"){
 					vacY = null;
 				}
 				else{
-					vacY = parseInt(vacY);
+					vacY = parseFloat(vacY);
 				}
 				vac.push([vacX, vacY]);
 				if(vacX == null && vacY == null){
@@ -534,7 +606,7 @@ function userInterface(){
 			}
 			return vac;
 		}
-		if(this.selectionType == "block"){ //summons block
+		if(this.selectionType == "block" && Math.abs(this.selectionCoordsA[0]-this.selectionCoordsB[0]) > 10 && Math.abs(this.selectionCoordsA[1]-this.selectionCoordsB[1]) > 10){ //summons block. Also checks to make sure it isn't stupidly small
 			var dim = [selectionInEngineB[0]-selectionInEngineA[0], selectionInEngineB[1]-selectionInEngineA[1]];
 			if(dim[0] < 0){
 				var temp = selectionInEngineA[0];
@@ -553,9 +625,9 @@ function userInterface(){
 
 			var color = scrubColor(ui.textFields[t].value)
 			var gravity = ui.checkboxFields[c].value;
-			var mass = parseInt(ui.textFields[t+1].value);
+			var mass = parseFloat(ui.textFields[t+1].value);
 			if(ui.textFields[t+1].value == "x"){mass=0;}
-			var initialVeloc = [parseInt(ui.textFields[t+2].value), -parseInt(ui.textFields[t+3].value)];
+			var initialVeloc = [parseFloat(ui.textFields[t+2].value), -parseFloat(ui.textFields[t+3].value)];
 			var vac = getVac(1);
 
 			var rect = new basicObject("block", selectionInEngineA, dim, {color:color, gravity:gravity, mass:mass, initialVeloc:initialVeloc, vac:vac});
@@ -573,16 +645,16 @@ function userInterface(){
 				console.log("Error: Block summoned inside of existing entity.")
 			}
 		}
-		if(this.selectionType == "circle"){ //summons circle
+		if(this.selectionType == "circle" && Math.sqrt(Math.pow(this.selectionCoordsA[0]-this.selectionCoordsB[0], 2)+Math.pow(this.selectionCoordsA[1]-this.selectionCoordsB[1], 2) > 5)){ //summons circle
 			var dim = [Math.sqrt(Math.pow(selectionInEngineA[0]-selectionInEngineB[0], 2) + Math.pow(selectionInEngineA[1]-selectionInEngineB[1], 2))];
 			var t = findStartIndex(2, ui.textFields);
 			var c = findStartIndex(2, ui.checkboxFields);
 
 			var color = scrubColor(ui.textFields[t].value)
 			var gravity = ui.checkboxFields[c].value;
-			var mass = parseInt(ui.textFields[t+1].value);
+			var mass = parseFloat(ui.textFields[t+1].value);
 			if(ui.textFields[t+1].value == "x"){mass=0;}
-			var initialVeloc = [parseInt(ui.textFields[t+2].value), -parseInt(ui.textFields[t+3].value)];
+			var initialVeloc = [parseFloat(ui.textFields[t+2].value), -parseFloat(ui.textFields[t+3].value)];
 			var vac = getVac(2);
 
 			var circ = new basicObject("circle", selectionInEngineA, dim, {color:color, gravity:gravity, mass:mass, initialVeloc:initialVeloc, vac:vac});

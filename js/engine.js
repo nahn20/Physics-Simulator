@@ -32,6 +32,7 @@ function engine(){
 			}
 			this.entities[i].collidedThisTick = false;
 		}
+		ui.ticksSinceLastMove += 1;
 	}
 	this.drawLoop = function(){
 		for(var i = 0; i < this.cameras.length; i++){
@@ -192,15 +193,21 @@ function startEngine(){
 			if(event.keyCode == 27){ //esc
 				ui.selectionType = "none";
 			}
+			if(event.keyCode == 9){ //tab
+				event.preventDefault();
+			}
 		}
 		else{
 			var selectedField = ui.textFields[ui.selectedTextFieldIndex];
-			if((selectedField.inputType == "int" || selectedField.inputType == "intNullX") && ((event.keyCode >= 48 && event.keyCode <= 57) || event.keyCode == 189)){
+			if((selectedField.inputType == "int" || selectedField.inputType == "intNullX") && ((event.keyCode >= 48 && event.keyCode <= 57) || event.keyCode == 189 || event.keyCode == 190)){
 				if(selectedField.value == "0" || selectedField.value == "x"){
 					selectedField.value = "";
 				}
 				if(event.keyCode == 189 && selectedField.value == ""){ //Minus be wack
 					selectedField.value += "-";
+				}
+				else if(event.keyCode == 190){ //Decimals be wack
+					selectedField.value += ".";
 				}
 				else{
 					selectedField.value += String.fromCharCode(event.keyCode);

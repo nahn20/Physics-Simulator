@@ -32,11 +32,12 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
         return false;
     }
     this.drawAll = function(){
+		var doParameters = ui.checkboxFields[findStartIndex(settingsIndex, ui.checkboxFields)].value;
 		function caseDraw(obj, thisCam){ //Slightly convoluted way of doing this, but I really don't want to write this function twice
             switch(obj.type){
                 case "block":
 					thisCam.drawRect(obj);
-					if(obj.displayParameters){
+					if(doParameters && !obj.isSelection){
 						thisCam.drawParameters(obj);
 					}
 					if(obj.displayNumCollision){ //Migrate into drawParameters at some point
@@ -51,7 +52,7 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
 					break;
 				case "circle":
 					thisCam.drawCircle(obj);
-					if(obj.displayParameters){
+					if(doParameters && !obj.isSelection){
 						thisCam.drawParameters(obj);
 					}
 				case "spring":
@@ -69,7 +70,9 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
                     break;
             }
 		}
-		this.connectingParametersWeb();
+		if(doParameters){
+			this.connectingParametersWeb();
+		}
         for(var i = 0; i < sim.entities.length; i++){ //Drawing all entities
 			caseDraw(sim.entities[i], this);
 			if(sim.entities[i].autoReturnColor != false){ //Returns objects to default color. Gets rid of flickering issue with desynced ticks.
@@ -89,6 +92,7 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
 					lineWidth : 4,
 					color : "black",
 					fill : false,
+					isSelection : true,
 				}
 				copy.pos[0] += copy.lineWidth;
 				copy.pos[1] += copy.lineWidth;
@@ -246,7 +250,8 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
 	}
 	this.drawParametersBoxGeneral = function(texts, x, y, color){ //Draws a general parameters box based on x (which is center x of box) and y (which is top y). Width and height are auto calculated
 		var dim = [0, 0];
-		const textSizeMultiplier = 2;
+		var t = findStartIndex(settingsIndex, ui.textFields);
+		const textSizeMultiplier = ui.textFields[t+1].value;
 		const verticalMarginsBase = 6; //Base value for top and bottom margins on text
 		const verticalLineSpacingBase = 16; //Base value for space between lines of text
 		var longestLine = ""; //Longest line of all the texts
@@ -283,7 +288,7 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
 		var texts = [];
 		texts[0] = "mass: " + abbreviateNum(obj.mass, 5);
 		texts[1] = "vx: " + abbreviateNum(obj.veloc[0], 3);
-		texts[2] = "vy: " + abbreviateNum(obj.veloc[1], 3);
+		texts[2] = "vy: " + abbreviateNum(-obj.veloc[1], 3);
 		var objCenterX;
 		var objBottomY;
 		if(obj.type == "block"){
@@ -317,7 +322,7 @@ function cameraConstructor(number, pos=[0,0], screenPos=[0,0], dim=[600,300], op
 					sumPos[1] += obj.pos[1];
 				}
 				params[0] += obj.mass*obj.veloc[0]; //x momentum
-				params[1] += obj.mass*obj.veloc[1]; //y momentum
+				params[1] += -obj.mass*obj.veloc[1]; //y momentum
 				params[2] += obj.mass*(obj.veloc[0]*obj.veloc[0]+obj.veloc[1]*obj.veloc[1]); //I think this is how you calculate total KE? I'm too lazy to check
 			}
 		}
