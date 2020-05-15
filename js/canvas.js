@@ -8,7 +8,7 @@ var cvs = {
 		this.ctx = this.canvas.getContext("2d");
 		this.ctx.imageSmoothingEnabled = false;
 		this.canvas.addEventListener("wheel", function(event){
-			var scrollAmount = 2*Math.sign(event.deltaY); //Standardized scroll amount
+			var scrollAmount = 4*Math.sign(event.deltaY); //Standardized scroll amount
 			event.preventDefault();
 			var canvasCoords = cvs.canvas.getBoundingClientRect();
 			var mouseX = event.x - canvasCoords.left;
