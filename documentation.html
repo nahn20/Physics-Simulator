@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Info</title>
+        <style>
+			body{
+				background: aliceblue
+			}
+
+        </style>
+    </head>
+    <body onload="startEngine(false)">
+		<h3>Introduction</h3>
+		Hi! I'm Nathan Ahn (well actually this is an ugly html page, but the person writing it is Nathan). First off, I apologize to my web design teacher. I'm really too lazy to make this page look decent beyond changing the background color. Anyways, this is the result of my year-long independent study combining computer science and physics. I worked under the guidence of Dr. Gries and Mr. Peters at Hopkins School. This is a simulator for basic kinematics and collision. I doubt anyone is going to use it, but I'm going to leave the website running on my GitHub page. If anyone does happen to look at this in a year or so, say hi! My email is nathancahn [@] gmail.com, and I'd be happy to hear from you if you find some use out of this website. 
+		<h3>User's Guide</h3>
+		I like to think my website is self-explanatory, but there's a few hidden features. Everything else should be clear if you hover over it for a bit. 
+		<br>- Camera controls: right click to center the camera on the place you click, scroll to zoom in and out
+		<br>- Mouse selection: c to switch to circle tool, b to switch to rectangle tool. Both can be selected from the menu by clicking on their respective icons. Esc to get rid of your mouse tool.
+		<br>- Pause: spacebar
+		<h4>Unimplemented Features</h4>
+		There's a couple of features that I implemented early on which didn't make the final cut. They're still built into the code, so if you want to take a look, you can read the <a href="https://github.com/nahn20/Physics-Simulator" target="_blank">source code</a>. 
+		<br>- Rotation: rotational mechanics are actually almost entirely implemented, except I was never able to crack the accurate prediction of rotational-linear collisions. I didn't see much use for it in the end, and I figured this simulator was best for focusing on standard kinematic motion. 
+		<br>- Springs: again, similar reason as above in keeping the simulator simple. Funnily enough, springs were the first feature I added to the simulation. The problem is they don't work cleanly with all the moving objects, due to the issue of the tick skipping over the apex of a block-spring's motion. I solved by hard coding springs using sin and cos equations, but those didn't integrate nicely with everything else. I spent a long time trying to develop a tick-splitting idea, but I didn't succeed. Maybe someday.
+		<br>- Multiple Cameras: ok, this feature is actually sick and fully implemented. It's just completely useless for this application. If you want a demo, <a href="https://nahn20.github.io/gameEngine/" target="_blank">Here's</a> a game engine that I made for AP CS that uses multiple cameras nicely. It's entirely copied and pasted over, so it would've been a waste of time removoing the multi-cam features.
+		<h4>If you liked this, then you'll also enjoy...</h4>
+		my other projects! Check out my <a href="https://github.com/nahn20?tab=repositories" target="_blank">GitHub page</a>! I keep it updated with the most interesting of the things I've worked on. I'm getting a bit nostalgic here, because I'm typing this up on my last day of high school. My GitHub page serves as a visible progression of my improvement in programming throughout high school. Specifically, for my current main language, JavaScript. If you're wondering how you can get started with programming, I'd say pick an idea and gopher it! I decided one day in web design I wanted to make a 2D fighting game, <a href="https://nahn20.github.io/game/" target="_blank">so I did</a>. The year after that (sophomore year), I spent way too many hours cooped up in the library programming a <a href="https://nahn20.github.io/game2/" target="_blank">game</a> where I screwed around and made ninjas fight epic 2D dragons. That one's a little less complete, but it taught me important lessons in organized data storage. After that, came the game engine which I already linked above. And this year, I made the physics simulator (you're here already). Hopefully, my progression continues in college where I'll be majoring in computer science. If you have any questions about how I learned how to program, read through the source code or just email me. I don't bite (at least not over email). 
+		<h4>Conclusion</h4>
+		First off, I need to thank my advisors who offered vital guidance for how to best manuever this project. Thank you for taking up this endeavor with your own free time.
+		<br>Dr. Gries, thank you for teaching me so much about calculus and computer science. I couldn't have asked for a better teacher to spend AP Computer Science, AP Calculus BC, Multivariable Calculus, Linear Algebra, and this Independent Study with. 
+		<br>Mr. Peters, while I haven't formally had you as a teacher in a standard classroom setting, I thank you for being a fantastic robotics coach. I'm also glad I was able to be your first independent study mentee, and I hope you enjoyed it enough to take up more in the future. Also, I promise I'll return your book once this whole COVID-19 business is over. 
+		<br>Hopkins, for letting me get class credit for this. Seriously, I'm amazed I can program for a year and have it count as a class. I do wish you had more advanced level computer science classes, but this was a great way for me to continue my study of computer science without overloading myself with intense classes. 
+		<br>Stack Overflow, for whenever I forgot the most basic of syntax.
+		<br><br>
+		...and sorry for the lack of comments in the source code. Bye!
+    </body>
+</html>

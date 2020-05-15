@@ -178,7 +178,7 @@ function userInterface(){
 		}
 		var sourceArray = [];
 		if(this.menu == 0){ //Regular menu
-			sourceArray = ["images/icons/search.png", "images/icons/block.png", "images/icons/circle.png", "images/icons/camera.png", "images/icons/gear.png"];
+			sourceArray = ["images/icons/search.png", "images/icons/block.png", "images/icons/circle.png", "images/icons/camera.png", "images/icons/gear.png", "images/icons/question_mark.png"];
 		}
 		if(this.menu == 1){ //Menu for having 1 selected
 			sourceArray = ["images/icons/x.png"];
@@ -271,7 +271,7 @@ function userInterface(){
 				if(this.hoveredElement == 0){ //Handles search and scrolling
 					var dim = [100, 50];
 					var numPerRow = Math.floor(this.maxSideMenuDim[0]/(dim[0]+20)); //Added constant makes it comfier - more space between tight images
-					var numPerColumn = 7;
+					var numPerColumn = 8;
 					var widthMargin = (this.maxSideMenuDim[0]-numPerRow*dim[0])/(numPerRow+1); //Width between edges of images
 					var heightMargin = 10;
 					var leftMargin = this.menuPos[0]+this.iconDimensions[0]+this.margin/2;
@@ -502,6 +502,9 @@ function userInterface(){
 					sim.cameras = constructCamerasFromString(presets[searchDisplayPresets[i][0]].camText);
 				}
 			}
+		}
+		if(this.hoveredElement == 5){
+			window.open("documentation.html")
 		}
 		//Developer tools\\
 		if(this.hoveredElement == 300){ //Black. Copies entities

@@ -26,9 +26,9 @@ function engine(){
 		for(var i = 0; i < this.entities.length; i++){
 			if(this.entities[i].collidedThisTick){ //TODO: Fix multiple vac collisions
 				this.entities[i].vac = shiftArrayUp(this.entities[i].vac);
-			}
-			if(this.entities[i].vac = []){
-				this.entities[i].vac = [[null, null]];
+				if(this.entities[i].vac = []){
+					this.entities[i].vac = [[null, null]];
+				}
 			}
 			this.entities[i].collidedThisTick = false;
 		}
@@ -133,7 +133,7 @@ function startEngine(){
 	sim.entities.push(new basicObject("block", [2000, 0], [50, 1050], {gravity:false, infiniteMass:true}));
 	sim.entities.push(new basicObject("block", [500, 500], [50, 50], {gravity:false, initialVeloc: [10, 5]}));
 	*/
-	var preset = 9; //Look here to change default preset
+	var preset = 0; //Look here to change default preset
 	sim.entities = constructEntitiesFromString(presets[preset].simText);
 	sim.cameras = constructCamerasFromString(presets[preset].camText);
 	// sim.entities = constructEntitiesFromString(presets[presets.length-1].simText);
